@@ -14,6 +14,8 @@ services:
       - gen-ai-n8n-builder-caddy-data:/data
       - ${DATA_FOLDER}/caddy_config:/config
       - ${DATA_FOLDER}/caddy_config/Caddyfile:/etc/caddy/Caddyfile
+    networks:
+      - gen-ai-n8n-builder-network
 
   n8n:
     container_name: gen-ai-n8n-builder
@@ -28,10 +30,39 @@ services:
       - NODE_ENV=production
       - WEBHOOK_URL=https://${SUBDOMAIN}.${DOMAIN_NAME}/
       - GENERIC_TIMEZONE=${GENERIC_TIMEZONE}
+      - DB_TYPE=mongodb
+      - DB_MONGODB_CONNECTION_URL=mongodb://mongodb:27017/n8n
     volumes:
       - gen-ai-n8n-builder-data:/home/node/.n8n
       - ${DATA_FOLDER}/local_files:/files
-      
+    depends_on:
+      - mongodb
+    networks:
+      - gen-ai-n8n-builder-network
+
+  mongodb:
+    container_name: gen-ai-n8n-builder-mongodb
+    image: mongo:6
+    restart: always
+    ports:
+      - "27017:27017"
+    volumes:
+      - gen-ai-n8n-builder-mongo-data:/data/db
+    networks:
+      - gen-ai-n8n-builder-network
+
+  ollama:
+    container_name: gen-ai-n8n-builder-ollama
+    image: ollama/ollama
+    restart: always
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama-models:/root/.ollama
+    tty: true
+    networks:
+      - gen-ai-n8n-builder-network
+
 volumes:
   gen-ai-n8n-builder-caddy-data:
     name: gen-ai-n8n-builder-caddy-data
@@ -39,3 +70,14 @@ volumes:
   gen-ai-n8n-builder-data:
     name: gen-ai-n8n-builder-data
     driver: local
+  gen-ai-n8n-builder-mongo-data:
+    name: gen-ai-n8n-builder-mongo-data
+    driver: local
+  ollama-models:
+    name: ollama-models
+    driver: local
+
+networks:
+  gen-ai-n8n-builder-network:
+    name: gen-ai-n8n-builder-network
+    driver: bridge
