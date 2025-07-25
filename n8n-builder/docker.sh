@@ -6,8 +6,8 @@ YELLOW='\033[1;33m'
 CYAN='\033[0;36m'
 NC='\033[0m' # No Color
 
-OLLAMA_CONTAINER="gen-ai-n8n-builder-ollama"
 PROFILE="cpu"  # Change to gpu or gpu-amd if needed
+OLLAMA_CONTAINER="gen-ai-n8n-builder-ollama-$PROFILE"
 
 print_banner() {
     echo -e "${CYAN}"

@@ -42,7 +42,6 @@ x-n8n: &service-n8n
 
 x-ollama: &service-ollama
   image: ollama/ollama:latest
-  container_name: gen-ai-n8n-builder-ollama
   networks: ['gen-ai-n8n-builder-network']
   restart: unless-stopped
   ports:
