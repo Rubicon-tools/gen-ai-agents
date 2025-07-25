@@ -24,6 +24,7 @@ pull_models() {
     echo -e "${CYAN}Pulling required Ollama models...${NC}"
     docker exec "$OLLAMA_CONTAINER" ollama pull llama3
     docker exec "$OLLAMA_CONTAINER" ollama pull llava
+    docker exec "$OLLAMA_CONTAINER" ollama pull gemma:2b
     echo -e "${GREEN}✔ Ollama models pulled successfully.${NC}"
 }
 
