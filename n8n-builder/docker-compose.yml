@@ -1,5 +1,7 @@
 version: "3.7"
 
+name: gen-ai-n8n-builder
+
 volumes:
   gen-ai-n8n-builder-data:
   gen-ai-n8n-builder-caddy-data:
@@ -63,7 +65,6 @@ x-init-ollama: &init-ollama
     - "sleep 3; ollama pull llama3 && ollama pull llava"
 
 services:
-  name: gen-ai-n8n-builder
   postgres:
     image: postgres:16-alpine
     hostname: gen-ai-n8n-builder-postgres
