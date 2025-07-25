@@ -4,8 +4,8 @@ volumes:
   gen-ai-n8n-builder-data:
   gen-ai-n8n-builder-caddy-data:
   gen-ai-n8n-builder-postgres-data:
-  gen-ai-ollama-data:
-   gen-ai-n8n-builder-qdrant-data:
+  gen-ai-n8n-builder-ollama-data:
+  gen-ai-n8n-builder-qdrant-data:
 
 networks:
   gen-ai-n8n-builder-network:
@@ -18,7 +18,7 @@ x-n8n: &service-n8n
   networks: ['gen-ai-n8n-builder-network']
   environment:
     - DB_TYPE=postgresdb
-    - DB_POSTGRESDB_HOST=gen-ai-postgres
+    - DB_POSTGRESDB_HOST=gen-ai-n8n-builder-postgres
     - DB_POSTGRESDB_USER=${POSTGRES_USER}
     - DB_POSTGRESDB_PASSWORD=${POSTGRES_PASSWORD}
     - DB_POSTGRESDB_DATABASE=${POSTGRES_DB}
@@ -48,14 +48,14 @@ x-ollama: &service-ollama
   ports:
     - 11434:11434
   volumes:
-    - gen-ai-ollama-data:/root/.ollama
+    - gen-ai-n8n-builder-ollama-data:/root/.ollama
 
 x-init-ollama: &init-ollama
   image: ollama/ollama:latest
   networks: ['gen-ai-n8n-builder-network']
   container_name: gen-ai-n8n-builder-ollama-pull
   volumes:
-    - gen-ai-ollama-data:/root/.ollama
+    - gen-ai-n8n-builder-ollama-data:/root/.ollama
   entrypoint: /bin/sh
   environment:
     - OLLAMA_HOST=gen-ai-n8n-builder-ollama:11434
@@ -84,8 +84,8 @@ services:
 
   n8n-import:
     <<: *service-n8n
-    hostname: gen-ai-n8n-import
-    container_name: gen-ai-n8n-import
+    hostname: gen-ai-n8n-builder-import
+    container_name: gen-ai-n8n-builder-import
     entrypoint: /bin/sh
     command:
       - "-c"
@@ -96,7 +96,7 @@ services:
 
   n8n:
     <<: *service-n8n
-    hostname: gen-ai-n8n
+    hostname: gen-ai-n8n-builder
     container_name: gen-ai-n8n-builder
     restart: unless-stopped
     ports:
