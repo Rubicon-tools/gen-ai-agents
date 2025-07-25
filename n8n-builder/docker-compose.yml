@@ -44,6 +44,7 @@ x-n8n: &service-n8n
 
 x-ollama: &service-ollama
   image: ollama/ollama:latest
+  container_name: gen-ai-n8n-builder-ollama
   networks: ['gen-ai-n8n-builder-network']
   restart: unless-stopped
   ports:
@@ -138,10 +139,12 @@ services:
   ollama-cpu:
     profiles: ["cpu"]
     <<: *service-ollama
+    container_name: gen-ai-n8n-builder-ollama-cpu
 
   ollama-gpu:
     profiles: ["gpu-nvidia"]
     <<: *service-ollama
+    container_name: gen-ai-n8n-builder-ollama-gpu
     deploy:
       resources:
         reservations:
@@ -153,6 +156,7 @@ services:
   ollama-gpu-amd:
     profiles: ["gpu-amd"]
     <<: *service-ollama
+    container_name: gen-ai-n8n-builder-ollama-gpu-amd
     image: ollama/ollama:rocm
     devices:
       - "/dev/kfd"
@@ -161,18 +165,21 @@ services:
   ollama-pull-llama-cpu:
     profiles: ["cpu"]
     <<: *init-ollama
+    container_name: gen-ai-n8n-builder-ollama-pull-llama-cpu
     depends_on:
       - ollama-cpu
 
   ollama-pull-llama-gpu:
     profiles: ["gpu-nvidia"]
     <<: *init-ollama
+    container_name: gen-ai-n8n-builder-ollama-pull-llama-gpu
     depends_on:
       - ollama-gpu
 
   ollama-pull-llama-gpu-amd:
     profiles: ["gpu-amd"]
     <<: *init-ollama
+    container_name: gen-ai-n8n-builder-ollama-pull-llama-gpu-amd
     image: ollama/ollama:rocm
     depends_on:
       - ollama-gpu-amd
