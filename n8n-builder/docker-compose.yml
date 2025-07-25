@@ -16,7 +16,6 @@ networks:
 
 x-n8n: &service-n8n
   image: n8nio/n8n:latest
-  container_name: gen-ai-n8n-builder
   networks: ['gen-ai-n8n-builder-network']
   environment:
     - DB_TYPE=postgresdb
@@ -44,7 +43,6 @@ x-n8n: &service-n8n
 
 x-ollama: &service-ollama
   image: ollama/ollama:latest
-  container_name: gen-ai-n8n-builder-ollama
   networks: ['gen-ai-n8n-builder-network']
   restart: unless-stopped
   ports:
@@ -55,7 +53,6 @@ x-ollama: &service-ollama
 x-init-ollama: &init-ollama
   image: ollama/ollama:latest
   networks: ['gen-ai-n8n-builder-network']
-  container_name: gen-ai-n8n-builder-ollama-pull
   volumes:
     - gen-ai-n8n-builder-ollama-data:/root/.ollama
   entrypoint: /bin/sh
