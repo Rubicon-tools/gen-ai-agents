@@ -7,7 +7,7 @@ CYAN='\033[0;36m'
 NC='\033[0m' # No Color
 
 PROFILE="cpu"  # Change to gpu or gpu-amd if needed
-OLLAMA_CONTAINER="gen-ai-n8n-builder-ollama-$PROFILE"
+OLLAMA_CONTAINER=$(docker ps --filter "ancestor=ollama/ollama:latest" --format '{{.Names}}' | grep "$PROFILE" | head -n 1)
 
 print_banner() {
     echo -e "${CYAN}"
@@ -23,6 +23,10 @@ print_usage() {
 
 pull_models() {
     echo -e "${CYAN}Pulling required Ollama models...${NC}"
+    if [ -z "$OLLAMA_CONTAINER" ]; then
+        echo -e "${RED}✖ Could not find running Ollama container for profile '$PROFILE'.${NC}"
+        return
+    fi
     docker exec "$OLLAMA_CONTAINER" ollama pull llama3
     docker exec "$OLLAMA_CONTAINER" ollama pull llava
     echo -e "${GREEN}✔ Ollama models pulled successfully.${NC}"

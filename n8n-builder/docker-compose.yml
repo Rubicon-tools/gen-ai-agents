@@ -63,6 +63,7 @@ x-init-ollama: &init-ollama
     - "sleep 3; ollama pull llama3 && ollama pull llava"
 
 services:
+  name: gen-ai-n8n-builder
   postgres:
     image: postgres:16-alpine
     hostname: gen-ai-n8n-builder-postgres
