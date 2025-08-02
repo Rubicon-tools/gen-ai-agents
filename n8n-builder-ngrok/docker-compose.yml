@@ -1,21 +1,48 @@
-version: "3.9"
-
 services:
   n8n:
     container_name: n8n
     image: docker.n8n.io/n8nio/n8n
+    restart: unless-stopped
     environment:
-      - WEBHOOK_URL=${URL}
+      - WEBHOOK_URL=${WEBHOOK_URL}
       - TZ=${TIMEZONE}
       - GENERIC_TIMEZONE=${TIMEZONE}
+      - EDITOR_BASE_URL=${EDITOR_BASE_URL}
+      - N8N_DEFAULT_BINARY_DATA_MODE=${N8N_DEFAULT_BINARY_DATA_MODE}
+      - N8N_COMMUNITY_PACKAGES_ALLOW_TOOL_USAGE=${N8N_COMMUNITY_PACKAGES_ALLOW_TOOL_USAGE}
+      - N8N_RUNNERS_ENABLED=${N8N_RUNNERS_ENABLED}
+      - N8N_ENFORCE_SETTINGS_FILE_PERMISSIONS=${N8N_ENFORCE_SETTINGS_FILE_PERMISSIONS}
+
+      # PostgreSQL DB config
+      - DB_TYPE=postgresdb
+      - DB_POSTGRESDB_HOST=postgres
+      - DB_POSTGRESDB_PORT=5432
+      - DB_POSTGRESDB_DATABASE=${POSTGRES_DB}
+      - DB_POSTGRESDB_USER=${POSTGRES_USER}
+      - DB_POSTGRESDB_PASSWORD=${POSTGRES_PASSWORD}
     networks:
       - n8n-network
     volumes:
       - n8n_data:/home/node/.n8n
 
+  postgres:
+    image: postgres:15
+    container_name: n8n-postgres
+    restart: unless-stopped
+    environment:
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_DB=${POSTGRES_DB}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - n8n-network
+
   ngrok:
     container_name: ngrok
     image: ngrok/ngrok:latest
+    ports:
+      - "4040:4040"
     environment:
       - NGROK_AUTHTOKEN=${NGROK_TOKEN}
     command:
@@ -23,13 +50,34 @@ services:
       - "--all"
       - "--config"
       - "/etc/ngrok.yml"
-    networks:
-      - n8n-network
     volumes:
       - ./ngrok.yml:/etc/ngrok.yml
+    networks:
+      - n8n-network
+
+  ollama:
+    container_name: ollama
+    image: ollama/ollama
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_data:/root/.ollama
+    networks:
+      - n8n-network
+    restart: unless-stopped
+    command: >
+      bash -c "
+      ollama serve &
+      sleep 5 &&
+      ollama pull llama3 &&
+      ollama pull llava &&
+      wait
+      "
 
 volumes:
   n8n_data:
+  postgres_data:
+  ollama_data:
 
 networks:
   n8n-network:
