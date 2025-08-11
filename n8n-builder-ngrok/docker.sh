@@ -5,19 +5,18 @@ GREEN='\033[0;32m'
 RED='\033[0;31m'
 YELLOW='\033[1;33m'
 CYAN='\033[0;36m'
-NC='\033[0m' # No Color
+NC='\033[0m'
 
 # ────── SETTINGS ──────
 NGROK_API="http://localhost:4040/api/tunnels"
 ENV_FILE=".env"
 PROJECT_NAME="n8n + Ngrok + Ollama + PostgreSQL"
-TMP_NGROK_URL_FILE=".ngrok_url.tmp"
 
 print_banner() {
   echo -e "${CYAN}"
-  echo "=============================================="
-  echo "   🚀 $PROJECT_NAME Launcher"
-  echo "==============================================${NC}"
+  echo -e "===================================================="
+  echo -e "   🚀 $PROJECT_NAME Launcher"
+  echo -e "====================================================${NC}"
 }
 
 print_usage() {
@@ -28,22 +27,7 @@ load_env_var() {
   grep "^$1=" "$ENV_FILE" | cut -d '=' -f2-
 }
 
-get_ngrok_url() {
-  echo -e "${CYAN}⏳ Waiting for Ngrok tunnel...${NC}"
-  for i in {1..15}; do
-    NGROK_URL=$(curl -s "$NGROK_API" | jq -r '.tunnels[] | select(.proto=="https") | .public_url')
-    if [[ -n "$NGROK_URL" ]]; then
-      echo -e "${GREEN}✔ Ngrok is running at: $NGROK_URL${NC}"
-      echo "$NGROK_URL" > "$TMP_NGROK_URL_FILE"
-      return 0
-    fi
-    sleep 1
-  done
-  echo -e "${RED}❌ Failed to fetch Ngrok URL.${NC}"
-  return 1
-}
-
-generate_env() {
+generate_env_with_url() {
   local url=$1
   local token=$(load_env_var "NGROK_TOKEN")
   local tz=$(load_env_var "TIMEZONE")
@@ -52,7 +36,7 @@ generate_env() {
   local postgres_db=$(load_env_var "POSTGRES_DB")
   local ollama_models=$(load_env_var "OLLAMA_MODELS")
 
-  echo -e "${CYAN}🔧 Regenerating .env with new URL: $url${NC}"
+  echo -e "${CYAN}🔧 Writing .env with Ngrok URL: $url${NC}"
   cat > "$ENV_FILE" <<EOF
 # Timezone
 TIMEZONE=$tz
@@ -79,45 +63,68 @@ OLLAMA_MODELS=$ollama_models
 EOF
 }
 
+fetch_ngrok_url() {
+  echo -e "${CYAN}⏳ Waiting for Ngrok to expose a tunnel...${NC}"
+  for i in {1..30}; do
+    local url=$(curl -s "$NGROK_API" | jq -r '.tunnels[] | select(.proto=="https") | .public_url')
+    if [[ -n "$url" && "$url" != "null" ]]; then
+      echo "$url"  # ✅ Output clean URL (no color)
+      return 0
+    fi
+    echo -e "${YELLOW}↪ Still waiting for Ngrok... ($i/30)${NC}"
+    sleep 2
+  done
+  return 1
+}
+
+pull_ollama_models() {
+  echo -e "${CYAN}🧠 Ensuring Ollama models are pulled...${NC}"
+  docker exec ollama ollama pull gemma:2b
+  docker exec ollama ollama pull llama3
+  docker exec ollama ollama pull llava
+  docker exec ollama ollama pull nous-hermes2
+  docker exec ollama ollama pull mistral
+  docker exec ollama ollama pull mistral:7b
+}
+
 # ────── MAIN ──────
 print_banner
 
 case "$1" in
   up)
-    echo -e "${GREEN}▶ Starting containers...${NC}"
+    echo -e "${GREEN}▶ Starting all containers...${NC}"
     docker compose up -d
 
-    if get_ngrok_url; then
-      INITIAL_URL=$(cat "$TMP_NGROK_URL_FILE")
-      generate_env "$INITIAL_URL"
-      rm -f "$TMP_NGROK_URL_FILE"
+    pull_ollama_models
 
-      echo -e "${YELLOW}🔁 Restarting containers with updated .env...${NC}"
-      docker compose down
-      docker compose up -d
+    sleep 8
 
-      echo -e "${CYAN}⏳ Waiting for Ngrok to regenerate final tunnel...${NC}"
-      sleep 3
-      if get_ngrok_url; then
-        FINAL_URL=$(cat "$TMP_NGROK_URL_FILE")
-        rm -f "$TMP_NGROK_URL_FILE"
-
-        # Update .env again with the real active Ngrok URL
-        generate_env "$FINAL_URL"
-        echo -e "${GREEN}✔ All ready.${NC}"
-        echo -e "${CYAN}🌐 n8n Editor: $FINAL_URL"
-        echo -e "🧠 Ollama API: http://localhost:11434${NC}"
-      fi
+    url=$(fetch_ngrok_url 2>/dev/null | tail -n 1)
+    if [[ -z "$url" ]]; then
+      echo -e "${RED}⛔ Aborting: Failed to fetch Ngrok URL.${NC}"
+      exit 1
     fi
+
+    echo -e "${GREEN}✔ Ngrok public URL: $url${NC}"
+    generate_env_with_url "$url"
+
+    echo -e "${YELLOW}🔁 Restarting only n8n container with updated URLs...${NC}"
+    docker compose stop n8n
+    docker compose rm -f n8n
+    docker compose --env-file "$ENV_FILE" up -d n8n
+
+    echo -e "${GREEN}✔ All ready.${NC}"
+    echo -e "${CYAN}🌐 n8n Editor: $url"
+    echo -e "🧠 Ollama API: http://localhost:11434${NC}"
     ;;
   down)
-    echo -e "${RED}⏹ Stopping containers...${NC}"
+    echo -e "${RED}⏹ Stopping all containers...${NC}"
     docker compose down
     ;;
   restart)
-    echo -e "${YELLOW}🔁 Restarting containers...${NC}"
+    echo -e "${YELLOW}🔁 Restarting all containers...${NC}"
     docker compose down
-    docker compose up -d
+    docker compose --env-file "$ENV_FILE" up -d --force-recreate --remove-orphans
     ;;
   logs)
     docker compose logs -f
