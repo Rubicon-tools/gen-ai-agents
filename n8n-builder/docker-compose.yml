@@ -34,6 +34,10 @@ services:
   n8n:
     image: docker.n8n.io/n8nio/n8n
     restart: unless-stopped
+    depends_on:
+      - postgres
+      - ollama
+      - qdrant
     ports:
       - "5678:5678"
     environment:
@@ -49,8 +53,6 @@ services:
       EDITOR_BASE_URL: https://${DOMAIN}
       GENERIC_TIMEZONE: ${TIMEZONE}
       N8N_ENCRYPTION_KEY: ${N8N_ENCRYPTION_KEY}
-    depends_on:
-      - postgres
     volumes:
       - n8n_data:/home/node/.n8n
     networks:
@@ -59,6 +61,11 @@ services:
   caddy:
     image: caddy:alpine
     restart: unless-stopped
+    depends_on:
+      - n8n
+      - ollama
+      - qdrant
+      - postgres
     ports:
       - "80:80"
       - "443:443"
