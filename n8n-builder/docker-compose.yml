@@ -1,25 +1,12 @@
-version: "3.7"
-
 name: gen-ai-n8n-builder
-
-volumes:
-  gen-ai-n8n-builder-data:
-  gen-ai-n8n-builder-caddy-data:
-  gen-ai-n8n-builder-postgres-data:
-  gen-ai-n8n-builder-ollama-data:
-  gen-ai-n8n-builder-qdrant-data:
-
-networks:
-  gen-ai-n8n-builder-network:
-    name: gen-ai-n8n-builder-network
-    driver: bridge
 
 x-n8n: &service-n8n
   image: n8nio/n8n:latest
+  restart: unless-stopped
   networks: ['gen-ai-n8n-builder-network']
   environment:
     - DB_TYPE=postgresdb
-    - DB_POSTGRESDB_HOST=gen-ai-n8n-builder-postgres
+    - DB_POSTGRESDB_HOST=postgres
     - DB_POSTGRESDB_USER=${POSTGRES_USER}
     - DB_POSTGRESDB_PASSWORD=${POSTGRES_PASSWORD}
     - DB_POSTGRESDB_DATABASE=${POSTGRES_DB}
@@ -28,7 +15,7 @@ x-n8n: &service-n8n
     - N8N_ENCRYPTION_KEY=${N8N_ENCRYPTION_KEY}
     - N8N_USER_MANAGEMENT_JWT_SECRET=${N8N_USER_MANAGEMENT_JWT_SECRET}
     - OLLAMA_HOST=https://ollama:11434
-    - N8N_HOST=${SUBDOMAIN}.${DOMAIN_NAME}
+    - N8N_HOST=${N8N_HOST}
     - N8N_PORT=${N8N_PORT}
     - N8N_PROTOCOL=${N8N_PROTOCOL}
     - WEBHOOK_URL=${WEBHOOK_URL}
@@ -42,97 +29,72 @@ x-n8n: &service-n8n
       required: true
   volumes:
     - gen-ai-n8n-builder-data:/home/node/.n8n
-    - ./n8n/demo-data:/demo-data
     - ./shared:/data/shared
+  ports:
+    - 5678:5678
+  depends_on:
+    postgres:
+      condition: service_healthy
 
 services:
   postgres:
     image: postgres:16-alpine
-    hostname: gen-ai-n8n-builder-postgres
-    container_name: gen-ai-n8n-builder-postgres
-    networks: ['gen-ai-n8n-builder-network']
     restart: unless-stopped
+    networks: ['gen-ai-n8n-builder-network']
     environment:
       - POSTGRES_USER=${POSTGRES_USER}
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
       - POSTGRES_DB=${POSTGRES_DB}
     volumes:
       - gen-ai-n8n-builder-postgres-data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432" # Optional: expose to host
     healthcheck:
       test: ['CMD-SHELL', 'pg_isready -h localhost -U ${POSTGRES_USER} -d ${POSTGRES_DB}']
       interval: 5s
       timeout: 5s
       retries: 10
 
-  n8n-import:
-    <<: *service-n8n
-    hostname: gen-ai-n8n-builder-import
-    container_name: gen-ai-n8n-builder-import
-    entrypoint: /bin/sh
-    command:
-      - "-c"
-      - "n8n import:credentials --separate --input=/demo-data/credentials && n8n import:workflow --separate --input=/demo-data/workflows"
-    depends_on:
-      postgres:
-        condition: service_healthy
-
-  n8n:
-    <<: *service-n8n
-    hostname: gen-ai-n8n-builder
-    container_name: gen-ai-n8n-builder
-    restart: unless-stopped
-    ports:
-      - 5678:5678
-    depends_on:
-      postgres:
-        condition: service_healthy
-      n8n-import:
-        condition: service_completed_successfully
-
   qdrant:
     image: qdrant/qdrant
-    hostname: gen-ai-n8n-builder-qdrant
-    container_name: gen-ai-n8n-builder-qdrant
-    networks: ['gen-ai-n8n-builder-network']
     restart: unless-stopped
+    networks: ['gen-ai-n8n-builder-network']
     ports:
       - 6333:6333
     volumes:
       - gen-ai-n8n-builder-qdrant-data:/qdrant/storage
 
-  caddy:
-    container_name: gen-ai-n8n-builder-caddy
-    image: caddy:latest
-    restart: always
-    ports:
-      - "80:80"
-      - "443:443"
-    depends_on:
-      - n8n
-    volumes:
-      - gen-ai-n8n-builder-caddy-data:/data
-      - ${DATA_FOLDER}/caddy_config:/config
-      - ${DATA_FOLDER}/caddy_config/Caddyfile:/etc/caddy/Caddyfile
-    networks:
-      - gen-ai-n8n-builder-network
-
   ollama:
     image: ollama/ollama:latest
-    container_name: gen-ai-n8n-builder-ollama
-    networks: ['gen-ai-n8n-builder-network']
     restart: unless-stopped
+    networks: ['gen-ai-n8n-builder-network']
     ports:
       - 11434:11434
     volumes:
       - gen-ai-n8n-builder-ollama-data:/root/.ollama
 
-  ollama-pull-models:
-    image: ollama/ollama:latest
-    container_name: gen-ai-n8n-builder-ollama-pull-models
+  caddy:
+    image: caddy:latest
+    restart: always
     networks: ['gen-ai-n8n-builder-network']
-    volumes:
-      - gen-ai-n8n-builder-ollama-data:/root/.ollama
-    entrypoint: /bin/sh
-    command: ["-c", "sleep 3; ollama pull llama3 && ollama pull llava && ollama pull gemma:2b && ollama pull tinyllama"]
     depends_on:
-      - ollama
+      - n8n
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - gen-ai-n8n-builder-caddy-data:/data
+      - ${DATA_FOLDER}/caddy_config:/config
+      - ${DATA_FOLDER}/caddy_config/Caddyfile:/etc/caddy/Caddyfile
+
+volumes:
+  gen-ai-n8n-builder-data:
+  gen-ai-n8n-builder-caddy-data:
+  gen-ai-n8n-builder-postgres-data:
+  gen-ai-n8n-builder-ollama-data:
+  gen-ai-n8n-builder-qdrant-data:
+
+networks:
+  gen-ai-n8n-builder-network:
+    name: gen-ai-n8n-builder-network
+    driver: bridge
