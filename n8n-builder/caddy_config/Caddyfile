@@ -1,20 +1,7 @@
 genai.rubicon.ma {
-  # TLS (auto HTTPS with Let's Encrypt)
-  tls bbougrine@rubicon.ma
+  reverse_proxy n8n:5678
 
-  # Redirect HTTP to HTTPS (Caddy handles this by default)
-  
-  # Security Headers
-  header {
-    Strict-Transport-Security "max-age=31536000; includeSubDomains; preload"
-    X-Content-Type-Options "nosniff"
-    X-Frame-Options "DENY"
-    Referrer-Policy "no-referrer"
-  }
+  tls contact@rubicon.ma
 
-  # Proxy requests to n8n editor UI and API
-  reverse_proxy / {
-    to n8n:5678
-    health_timeout 10s
-  }
+  encode gzip
 }

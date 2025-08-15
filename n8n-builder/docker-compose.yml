@@ -1,98 +1,81 @@
-x-n8n: &service-n8n
-  image: n8nio/n8n:latest
-  restart: unless-stopped
-  networks: ['gen-ai-n8n-builder-network']
-  environment:
-    - WEBHOOK_URL=${WEBHOOK_URL}
-    - TZ=${TIMEZONE}
-    - GENERIC_TIMEZONE=${TIMEZONE}
-    - EDITOR_BASE_URL=${EDITOR_BASE_URL}
-    - N8N_DEFAULT_BINARY_DATA_MODE=${N8N_DEFAULT_BINARY_DATA_MODE}
-    - N8N_COMMUNITY_PACKAGES_ALLOW_TOOL_USAGE=${N8N_COMMUNITY_PACKAGES_ALLOW_TOOL_USAGE}
-    - N8N_RUNNERS_ENABLED=${N8N_RUNNERS_ENABLED}
-    - N8N_ENFORCE_SETTINGS_FILE_PERMISSIONS=${N8N_ENFORCE_SETTINGS_FILE_PERMISSIONS}
-
-    # PostgreSQL DB config
-    - DB_TYPE=postgresdb
-    - DB_POSTGRESDB_HOST=postgres
-    - DB_POSTGRESDB_PORT=5432
-    - DB_POSTGRESDB_DATABASE=${POSTGRES_DB}
-    - DB_POSTGRESDB_USER=${POSTGRES_USER}
-    - DB_POSTGRESDB_PASSWORD=${POSTGRES_PASSWORD}
-  env_file:
-    - path: .env
-      required: true
-  volumes:
-    - gen-ai-n8n-builder-data:/home/node/.n8n
-    - ./shared:/data/shared
-  ports:
-    - 5678:5678
-  depends_on:
-    postgres:
-      condition: service_healthy
-
 services:
-  n8n:
-    <<: *service-n8n
-
   postgres:
-    image: postgres:16-alpine
+    image: postgres:15
     restart: unless-stopped
-    networks: ['gen-ai-n8n-builder-network']
     environment:
-      - POSTGRES_USER=${POSTGRES_USER}
-      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
-      - POSTGRES_DB=${POSTGRES_DB}
+      POSTGRES_USER=${POSTGRES_USER}
+      POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      POSTGRES_DB=${POSTGRES_DB}
     volumes:
-      - gen-ai-n8n-builder-postgres-data:/var/lib/postgresql/data
-    ports:
-      - "5432:5432"
-    healthcheck:
-      test: ['CMD-SHELL', 'pg_isready -h localhost -U ${POSTGRES_USER} -d ${POSTGRES_DB}']
-      interval: 5s
-      timeout: 5s
-      retries: 10
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - gen-ai-network
 
   qdrant:
     image: qdrant/qdrant
     restart: unless-stopped
-    networks: ['gen-ai-n8n-builder-network']
     ports:
-      - 6333:6333
+      - "6333:6333"
     volumes:
-      - gen-ai-n8n-builder-qdrant-data:/qdrant/storage
+      - qdrant_data:/qdrant/storage
+    networks:
+      - gen-ai-network
 
   ollama:
-    image: ollama/ollama:latest
+    image: ollama/ollama
     restart: unless-stopped
-    networks: ['gen-ai-n8n-builder-network']
-    ports:
-      - 11434:11434
     volumes:
-      - gen-ai-n8n-builder-ollama-data:/root/.ollama
+      - ollama_data:/root/.ollama
+    networks:
+      - gen-ai-network
+    command: bash -c "ollama serve"
+
+  n8n:
+    image: docker.n8n.io/n8nio/n8n
+    restart: unless-stopped
+    ports:
+      - "5678:5678"
+    environment:
+      - DB_TYPE=postgresdb
+      - DB_POSTGRESDB_HOST=postgres
+      - DB_POSTGRESDB_PORT=5432
+      - DB_POSTGRESDB_DATABASE=${POSTGRES_DB}
+      - DB_POSTGRESDB_USER=${POSTGRES_USER}
+      - DB_POSTGRESDB_PASSWORD=${POSTGRES_PASSWORD}
+      - N8N_DEFAULT_BINARY_DATA_MODE=filesystem
+      - N8N_HOST=localhost
+      - WEBHOOK_URL=https://${DOMAIN}
+      - EDITOR_BASE_URL=https://${DOMAIN}
+      - GENERIC_TIMEZONE=${TIMEZONE}
+      - N8N_ENCRYPTION_KEY=${N8N_ENCRYPTION_KEY}
+    depends_on:
+      - postgres
+    volumes:
+      - n8n_data:/home/node/.n8n
+    networks:
+      - gen-ai-network
 
   caddy:
-    image: caddy:latest
-    restart: always
-    networks: ['gen-ai-n8n-builder-network']
-    depends_on:
-      - n8n
+    image: caddy:alpine
+    restart: unless-stopped
     ports:
       - "80:80"
       - "443:443"
     volumes:
-      - gen-ai-n8n-builder-caddy-data:/data
-      - ${DATA_FOLDER}/caddy_config:/config
-      - ${DATA_FOLDER}/caddy_config/Caddyfile:/etc/caddy/Caddyfile
+      - ./caddy_config/Caddyfile:/etc/caddy/Caddyfile
+      - caddy_data:/data
+      - caddy_config:/config
+    networks:
+      - gen-ai-network
 
 volumes:
-  gen-ai-n8n-builder-data:
-  gen-ai-n8n-builder-caddy-data:
-  gen-ai-n8n-builder-postgres-data:
-  gen-ai-n8n-builder-ollama-data:
-  gen-ai-n8n-builder-qdrant-data:
+  postgres_data:
+  qdrant_data:
+  ollama_data:
+  n8n_data:
+  caddy_data:
+  caddy_config:
 
 networks:
-  gen-ai-n8n-builder-network:
-    name: gen-ai-n8n-builder-network
+  gen-ai-network:
     driver: bridge
