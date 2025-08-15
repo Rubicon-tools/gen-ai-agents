@@ -28,7 +28,6 @@ services:
       - ollama_data:/root/.ollama
     networks:
       - gen-ai-network
-    command: bash -c "ollama serve"
 
   n8n:
     image: docker.n8n.io/n8nio/n8n
