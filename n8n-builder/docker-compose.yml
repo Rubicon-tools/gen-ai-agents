@@ -1,7 +1,3 @@
-version: "3.7"
-
-name: gen-ai-n8n-builder
-
 x-n8n: &service-n8n
   image: n8nio/n8n:latest
   restart: unless-stopped
