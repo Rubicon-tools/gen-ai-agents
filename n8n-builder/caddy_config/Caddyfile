@@ -1,7 +1,5 @@
 genai.rubicon.ma {
-  reverse_proxy n8n:5678
-
-  tls contact@rubicon.ma
-
-  encode gzip
+    reverse_proxy n8n:5678 {
+      flush_interval -1
+    }
 }
