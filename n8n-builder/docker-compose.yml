@@ -1,5 +1,3 @@
-version: "3.7"
-
 services:
   caddy:
     image: caddy:latest
@@ -11,6 +9,8 @@ services:
       - caddy_data:/data
       - ${DATA_FOLDER}/caddy_config:/config
       - ${DATA_FOLDER}/caddy_config/Caddyfile:/etc/caddy/Caddyfile
+    networks:
+      - gen-ai-network
 
   postgres:
     image: postgres:15
@@ -23,6 +23,8 @@ services:
       - postgres_data:/var/lib/postgresql/data
     ports:
       - "5432:5432"   # optional, only expose if you need external access
+    networks:
+      - gen-ai-network
 
   n8n:
     image: docker.n8n.io/n8nio/n8n
@@ -49,11 +51,14 @@ services:
       - ${DATA_FOLDER}/local_files:/files
     depends_on:
       - postgres
+    networks:
+      - gen-ai-network
 
 volumes:
   caddy_data:
-    external: true
   n8n_data:
-    external: true
   postgres_data:
-    external: true
+
+networks:
+  gen-ai-network:
+    driver: bridge
