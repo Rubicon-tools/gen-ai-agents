@@ -1,0 +1,44 @@
+0) Prereqs
+
+Docker Desktop (Linux) running
+
+Compose v2 (docker compose version)
+
+A valid .env in the project root:
+
+JIRA_DOMAIN=yourcompany.atlassian.net
+JIRA_EMAIL=you@company.com
+JIRA_TOKEN=xxxxx   # Jira API token
+
+
+If .env is wrong, the build will succeed but the job will fail at runtime with Jira auth/host errors. Don’t overthink it—fix the secrets.
+
+1) Project Layout (expected)
+Report_generator/
+├─ Dockerfile
+├─ docker-compose.yml
+├─ docker.sh
+├─ report_script.py
+├─ utils/
+│   └─ Charts.py
+├─ requirements.txt
+├─ .env
+└─ Reports/           # created automatically; mounted to /app/Reports
+
+2) One-liners (what you actually need)
+# Build the image (fresh)
+bash docker.sh build
+
+# Bring up a persistent container and stream logs
+bash docker.sh up
+
+# Generate the PDF (runs inside the running container)
+bash docker.sh generate
+
+# Stop and remove the service
+bash docker.sh stop
+
+
+Deliverable lands here after generate:
+
+./Reports/jira_report.pdf

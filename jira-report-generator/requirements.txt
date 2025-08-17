@@ -1,0 +1,6 @@
+weasyprint
+requests
+python-dotenv
+matplotlib
+seaborn
+pandas

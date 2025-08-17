@@ -1,0 +1,11 @@
+version: "3.8"
+
+services:
+  report-generator:
+    build: .
+    container_name: report-generator
+    env_file:
+      - .env
+    volumes:
+      - ./reports:/app/reports
+    command: tail -f /dev/null
