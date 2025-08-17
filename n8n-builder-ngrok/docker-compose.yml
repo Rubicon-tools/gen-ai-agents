@@ -1,6 +1,6 @@
 services:
   n8n:
-    container_name: n8n
+    container_name: n8n-builder-dev-n8n
     image: docker.n8n.io/n8nio/n8n
     restart: unless-stopped
     ports:
@@ -23,13 +23,13 @@ services:
       - DB_POSTGRESDB_USER=${POSTGRES_USER}
       - DB_POSTGRESDB_PASSWORD=${POSTGRES_PASSWORD}
     networks:
-      - n8n-network
+      - n8n-builder-dev-network
     volumes:
-      - n8n_data:/home/node/.n8n
+      - n8n-builder-dev-n8n-data:/home/node/.n8n
 
   postgres:
     image: postgres:15
-    container_name: n8n-postgres
+    container_name: n8n-builder-dev-postgres
     ports:
       - "5432:5432"
     restart: unless-stopped
@@ -38,12 +38,12 @@ services:
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
       - POSTGRES_DB=${POSTGRES_DB}
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - n8n-builder-dev-postgres-data:/var/lib/postgresql/data
     networks:
-      - n8n-network
+      - n8n-builder-dev-network
 
   ngrok:
-    container_name: ngrok
+    container_name: n8n-builder-dev-ngrok
     image: ngrok/ngrok:latest
     ports:
       - "4040:4040"
@@ -57,24 +57,24 @@ services:
     volumes:
       - ./ngrok.yml:/etc/ngrok.yml
     networks:
-      - n8n-network
+      - n8n-builder-dev-network
 
   ollama:
-    container_name: ollama
+    container_name: n8n-builder-dev-ollama
     image: ollama/ollama
     ports:
       - "11434:11434"
     volumes:
-      - ollama_data:/root/.ollama
+      - n8n-builder-dev-ollama-data:/root/.ollama
     networks:
-      - n8n-network
+      - n8n-builder-dev-network
     restart: unless-stopped
 
 volumes:
-  n8n_data:
-  postgres_data:
-  ollama_data:
+  n8n-builder-dev-n8n-data:
+  n8n-builder-dev-postgres-data:
+  n8n-builder-dev-ollama-data:
 
 networks:
-  n8n-network:
+  n8n-builder-dev-network:
     driver: bridge
