@@ -1,5 +1,6 @@
 import html
 from datetime import datetime
+from zoneinfo import ZoneInfo
 from collections import defaultdict
 import os
 import requests
@@ -7,7 +8,6 @@ import urllib.parse
 from dotenv import load_dotenv
 import re
 from weasyprint import HTML
-from datetime import datetime
 import matplotlib.pyplot as plt
 import io
 import base64
@@ -315,6 +315,11 @@ html_content, issues = search_issues(query)
 html_content += generate_heatmap_html(issues)
 html_content += generate_distribution_charts_side_by_side(issues)
 
-output_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), '.', 'reports', 'jira_report.pdf')
+morocco_time = datetime.now(ZoneInfo("Africa/Casablanca"))
+timestamp = morocco_time.strftime("%d-%m-%Y-%H:%M")
+filename = f"jira_report_{timestamp}.pdf"
+
+output_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'reports', filename)
 HTML(string=html_content).write_pdf(output_path)
-print(f"✅ Report saved to: {output_path}")
+print(f"✅ Report saved to: ./reports/{filename}")
+

@@ -27,4 +27,4 @@ COPY . .
 RUN mkdir -p /app/reports
 
 # Run script
-CMD ["python", "report_script.py"]
+CMD ["tail", "-f", "/dev/null"]
