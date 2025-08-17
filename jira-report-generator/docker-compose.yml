@@ -1,7 +1,7 @@
 services:
-  report-generator:
+  jira-report-generator:
+    container_name: jira-report-generator
     build: .
-    container_name: report-generator
     env_file:
       - .env
     volumes:

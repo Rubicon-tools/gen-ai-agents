@@ -1,6 +1,6 @@
 #!/bin/bash
 
-CONTAINER_NAME="report-generator"
+CONTAINER_NAME="jira-report-generator"
 
 case "$1" in
   build)
