@@ -2,6 +2,7 @@
 
 IMAGE_NAME="report-generator"
 SERVICE_NAME="report-generator"
+CONTAINER_NAME="report-generator"
 
 case "$1" in
   build)
@@ -10,15 +11,15 @@ case "$1" in
     ;;
 
   generate)
-    echo "📄 Generating report..."
-    docker compose run --rm --entrypoint "python" $SERVICE_NAME report_script.py
+    echo "📄 Generating report inside running container..."
+    docker exec $CONTAINER_NAME python report_script.py
     echo "✅ Report generated in ./reports/jira_report.pdf"
     ;;
 
   up)
-    echo "⬆️ Starting persistent container..."
+    echo "⬆️ Starting and persisting container..."
     docker compose up -d $SERVICE_NAME
-    docker compose logs -f $SERVICE_NAME
+    echo "📦 Container is running in the background. You can now generate reports anytime."
     ;;
 
   stop)
