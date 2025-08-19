@@ -59,21 +59,21 @@ services:
     networks:
       - n8n-builder-dev-network
 
-  ollama:
-    container_name: n8n-builder-dev-ollama
-    image: ollama/ollama
-    ports:
-      - "11434:11434"
-    volumes:
-      - n8n-builder-dev-ollama-data:/root/.ollama
-    networks:
-      - n8n-builder-dev-network
-    restart: unless-stopped
+  # ollama:
+  #   container_name: n8n-builder-dev-ollama
+  #   image: ollama/ollama
+  #   ports:
+  #     - "11434:11434"
+  #   volumes:
+  #     - n8n-builder-dev-ollama-data:/root/.ollama
+  #   networks:
+  #     - n8n-builder-dev-network
+  #   restart: unless-stopped
 
 volumes:
   n8n-builder-dev-n8n-data:
   n8n-builder-dev-postgres-data:
-  n8n-builder-dev-ollama-data:
+  # n8n-builder-dev-ollama-data:
 
 networks:
   n8n-builder-dev-network:
