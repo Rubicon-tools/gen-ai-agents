@@ -1,0 +1,17 @@
+services:
+  agritech-news-agent:
+    container_name: agritech-news-agent
+    build: .
+    env_file:
+      - .env
+    volumes:
+      - .:/app
+    networks:
+      - n8n-builder-dev-network
+    command: tail -f /dev/null
+    restart: unless-stopped
+
+networks:
+  n8n-builder-dev-network:
+    external: true
+    name: n8n-builder-ngrok_n8n-builder-dev-network
