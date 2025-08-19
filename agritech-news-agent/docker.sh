@@ -15,7 +15,8 @@ case "$1" in
 
   scrape)
     echo "📄 Running scraper inside the container..."
-    docker exec -it $CONTAINER_NAME python main.py
+    ARTICLE_LIMIT=${2:-10}  # Default to 10 if not provided
+    docker exec -it $CONTAINER_NAME python main.py $ARTICLE_LIMIT
     ;;
 
   up)
@@ -29,7 +30,7 @@ case "$1" in
     ;;
 
   *)
-    echo "Usage: bash $0 {build|scrape|up|stop}"
+    echo "Usage: bash $0 {build|scrape [limit]|up|stop}"
     exit 1
     ;;
 esac

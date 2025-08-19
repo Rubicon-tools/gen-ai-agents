@@ -17,6 +17,3 @@ POSTGRES = {
     "password": os.getenv("POSTGRES_PASSWORD", "postgres"),
     "database": os.getenv("POSTGRES_DB", "arxiv_db"),
 }
-
-# Scraping configuration
-DEFAULT_MAX_ARTICLES = 6

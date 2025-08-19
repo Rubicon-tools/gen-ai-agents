@@ -108,6 +108,7 @@ def scrape(base_url: str, total_articles: int = None):
                 continue
 
             insert_article(parsed)
+            time.sleep(0.5)
             existing_ids.add(article_id)
             scraped += 1
 
