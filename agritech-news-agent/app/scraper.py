@@ -48,7 +48,7 @@ def parse_article(article):
         return None
 
 
-def scrape(base_url: str, total_articles: int = None):
+def scrape(base_url: str, total_articles: int = None, continue_mode: bool = False):
     print(f"🚜 Starting agritech-news-agent scraper...")
     init_db()
 
@@ -102,19 +102,23 @@ def scrape(base_url: str, total_articles: int = None):
 
             article_id = parsed["article_id"]
             if article_id in existing_ids:
-                print(f"⏭️ Skipping existing article_id: {article_id}")
-                existing_ids.add(article_id)
-                scraped += 1
-                continue
+                if continue_mode:
+                    print(f"⏭️ Skipping existing article_id: {article_id}")
+                    scraped += 1  # still counts toward limit
+                    continue
+                else:
+                    print(f"🛑 Found already scraped article_id: {article_id}. Stopping.")
+                    return
 
             insert_article(parsed)
-            time.sleep(0.5)
             existing_ids.add(article_id)
             scraped += 1
 
+            print(f"📝 Saved: {article_id}")
             if scraped % PROGRESS_EVERY == 0:
                 print(f"📊 Progress: {scraped}/{total_articles} articles saved")
 
+            time.sleep(0.5)
             time.sleep(random.uniform(1.2, 2.5))
 
-    print(f"\n✅ Done. Scraped and saved {scraped} new article(s).")
+    print(f"\n✅ Done. Scraped and saved {scraped} article(s).")

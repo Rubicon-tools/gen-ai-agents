@@ -15,8 +15,36 @@ case "$1" in
 
   scrape)
     echo "📄 Running scraper inside the container..."
-    ARTICLE_LIMIT=${2:-10}  # Default to 10 if not provided
-    docker exec -it $CONTAINER_NAME python main.py $ARTICLE_LIMIT
+
+    ARTICLE_LIMIT=10
+    CONTINUE_FLAG=""
+
+    # Validate and assign arguments
+    if [ -z "$2" ]; then
+      # No second arg: use defaults
+      :
+    elif [[ "$2" =~ ^[0-9]+$ ]]; then
+      ARTICLE_LIMIT="$2"
+      if [ "$3" == "-continue" ]; then
+        CONTINUE_FLAG="--continue"
+      elif [ -n "$3" ]; then
+        echo "❌ Invalid argument: '$3'"
+        echo "Usage: bash $0 scrape [limit] [-continue]"
+        exit 1
+      fi
+    elif [ "$2" == "-continue" ]; then
+      CONTINUE_FLAG="--continue"
+      if [ -n "$3" ]; then
+        echo "❌ Invalid argument order. Use: bash $0 scrape [limit] [-continue]"
+        exit 1
+      fi
+    else
+      echo "❌ Invalid argument: '$2'"
+      echo "Usage: bash $0 scrape [limit] [-continue]"
+      exit 1
+    fi
+
+    docker exec -it $CONTAINER_NAME python main.py "$ARTICLE_LIMIT" "$CONTINUE_FLAG"
     ;;
 
   up)
@@ -30,7 +58,7 @@ case "$1" in
     ;;
 
   *)
-    echo "Usage: bash $0 {build|scrape [limit]|up|stop}"
+    echo "Usage: bash $0 {build|scrape [limit] [-continue]|up|stop}"
     exit 1
     ;;
 esac
