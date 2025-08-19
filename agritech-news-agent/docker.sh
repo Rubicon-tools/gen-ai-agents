@@ -15,7 +15,7 @@ case "$1" in
 
   scrape)
     echo "📄 Running scraper inside the container..."
-    docker exec $CONTAINER_NAME python main.py
+    docker exec -it $CONTAINER_NAME python main.py
     ;;
 
   up)

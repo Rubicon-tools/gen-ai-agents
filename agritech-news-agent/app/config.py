@@ -19,4 +19,4 @@ POSTGRES = {
 }
 
 # Scraping configuration
-DEFAULT_MAX_ARTICLES = 5
+DEFAULT_MAX_ARTICLES = 6
