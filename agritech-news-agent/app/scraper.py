@@ -1,13 +1,16 @@
+import os
 import time
 import math
 import random
 import requests
 from bs4 import BeautifulSoup, NavigableString
 from app.db import insert_article, init_db, get_all_article_ids
+from app.uploader import upload_pdf_to_spaces
 
 BASE_URL = "https://arxiv.org"
 PAGE_SIZE = 25
 PROGRESS_EVERY = 1
+TEMP_PDF_DIR = "/tmp"
 
 def parse_article(article):
     try:
@@ -47,6 +50,23 @@ def parse_article(article):
         print(f"❌ Error parsing article: {e}")
         return None
 
+def download_and_upload_pdf(arxiv_id):
+    pdf_url = f"{BASE_URL}/pdf/{arxiv_id}"
+    local_path = os.path.join(TEMP_PDF_DIR, f"{arxiv_id}.pdf")
+    try:
+        response = requests.get(pdf_url)
+        if response.status_code == 200:
+            with open(local_path, "wb") as f:
+                f.write(response.content)
+            uploaded_url = upload_pdf_to_spaces(local_path, object_name=f"{arxiv_id}.pdf")
+            os.remove(local_path)
+            return uploaded_url
+        else:
+            print(f"❌ Could not download PDF for {arxiv_id}")
+            return None
+    except Exception as e:
+        print(f"❌ Error downloading/uploading PDF for {arxiv_id}: {e}")
+        return None
 
 def scrape(base_url: str, total_articles: int = None, continue_mode: bool = False):
     print(f"🚜 Starting agritech-news-agent scraper...")
@@ -69,7 +89,7 @@ def scrape(base_url: str, total_articles: int = None, continue_mode: bool = Fals
 
         start = page * PAGE_SIZE
         paged_url = f"{base_url}&size={PAGE_SIZE}&start={start}"
-        print(f"\n🔍 Scraping page {page + 1}:\n{paged_url}\n")
+        print(f"\n🔍 Scraping page {page + 1}: {paged_url}\n")
 
         try:
             response = requests.get(paged_url)
@@ -93,7 +113,6 @@ def scrape(base_url: str, total_articles: int = None, continue_mode: bool = Fals
             if parse_article(article) is not None
         ]
 
-        # Sort newest first
         parsed_articles.sort(key=lambda a: float(a['article_id']), reverse=True)
 
         for parsed in parsed_articles:
@@ -104,17 +123,21 @@ def scrape(base_url: str, total_articles: int = None, continue_mode: bool = Fals
             if article_id in existing_ids:
                 if continue_mode:
                     print(f"⏭️ Skipping existing article_id: {article_id}")
-                    scraped += 1  # still counts toward limit
+                    scraped += 1
                     continue
                 else:
-                    print(f"🛑 Found already scraped article_id: {article_id}. Stopping.")
+                    print(f"🚫 Found already scraped article_id: {article_id}. Stopping.")
                     return
+
+            # Upload PDF first
+            uploaded_pdf_url = download_and_upload_pdf(article_id)
+            if uploaded_pdf_url:
+                parsed["pdf_url"] = uploaded_pdf_url
 
             insert_article(parsed)
             existing_ids.add(article_id)
             scraped += 1
 
-            print(f"📝 Saved: {article_id}")
             if scraped % PROGRESS_EVERY == 0:
                 print(f"📊 Progress: {scraped}/{total_articles} articles saved")
 
