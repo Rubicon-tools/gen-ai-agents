@@ -23,8 +23,6 @@ services:
       POSTGRES_DB: n8n_db
     volumes:
       - n8n-builder-postgres-data:/var/lib/postgresql/data
-    ports:
-      - "5432:5432"   # optional, only expose if you need external access
     networks:
       - n8n-builder-network
 
@@ -32,8 +30,6 @@ services:
     container_name: n8n-builder-n8n
     image: docker.n8n.io/n8nio/n8n
     restart: always
-    ports:
-      - 5678:5678
     environment:
       - N8N_ENCRYPTION_KEY=${N8N_ENCRYPTION_KEY}
       - N8N_HOST=${SUBDOMAIN}.${DOMAIN_NAME}
