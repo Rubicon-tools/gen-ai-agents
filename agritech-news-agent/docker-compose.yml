@@ -6,9 +6,11 @@ services:
       - .env
     volumes:
       - .:/app
+    ports:
+      - "7171:7171"
     networks:
       - n8n-builder-dev-network
-    command: tail -f /dev/null
+    command: uvicorn app.scraper.api:app --host 0.0.0.0 --port 7171 --reload
     restart: unless-stopped
 
 networks:
