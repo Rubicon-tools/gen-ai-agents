@@ -1,4 +1,4 @@
-from app.scraper import scrape
+from scraper.scraper import scrape
 import sys
 
 if __name__ == "__main__":

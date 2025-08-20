@@ -2,7 +2,6 @@
 
 """
 This package contains the core modules for the agritech-news-agent project:
-- scraper.py: logic for scraping arxiv search results
 - db.py: database setup and persistence
 - config.py: configuration for the project (env, constants, etc.)
 """
