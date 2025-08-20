@@ -15,14 +15,11 @@ app.add_api_route("/ui", scraper_ui, methods=["GET"], response_class=HTMLRespons
 
 
 def run_scrape(count: int = Query(10, description="Number of items to scrape"),
-			   continue_flag: bool = Query(False, description="Continue flag"),
-			   update_flag: bool = Query(False, description="Update flag")):
+			   continue_flag: bool = Query(False, description="Continue flag")):
 	cwd = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 	cmd = ["python", "-u", "scraper/main.py", str(count)]
 	if continue_flag:
 		cmd.append("--continue")
-	if update_flag:
-		cmd.append("--update")
 
 	def stream_process():
 		process = subprocess.Popen(cmd, cwd=cwd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True, bufsize=1)

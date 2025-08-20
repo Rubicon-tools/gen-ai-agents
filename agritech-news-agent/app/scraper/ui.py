@@ -35,7 +35,6 @@ def scraper_ui(request: Request):
             <h2>Scraper Live Output</h2>
             <label>Count: <input type="number" id="count" value="10" min="1" /></label>
             <label><input type="checkbox" id="continue_flag" /> Continue</label>
-            <label><input type="checkbox" id="update_flag" /> Update</label>
             <button onclick="startScrape()">Start Scrape</button>
             <div id="output"></div>
         </div>
@@ -45,10 +44,8 @@ def scraper_ui(request: Request):
             output.textContent = '';
             const count = document.getElementById('count').value;
             const continueFlag = document.getElementById('continue_flag').checked;
-            const updateFlag = document.getElementById('update_flag').checked;
             let url = `/scrape?count=${count}`;
             if (continueFlag) url += `&continue_flag=true`;
-            if (updateFlag) url += `&update_flag=true`;
             fetch(url, { method: 'POST' })
                 .then(response => {
                     const reader = response.body.getReader();
