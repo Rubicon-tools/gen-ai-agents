@@ -114,7 +114,6 @@ def scrape(base_url: str, total_articles: int = None, continue_mode: bool = Fals
             existing_ids.add(article_id)
             scraped += 1
 
-            print(f"📝 Saved: {article_id}")
             if scraped % PROGRESS_EVERY == 0:
                 print(f"📊 Progress: {scraped}/{total_articles} articles saved")
 

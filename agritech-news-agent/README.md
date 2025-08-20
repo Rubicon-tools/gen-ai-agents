@@ -20,24 +20,23 @@ A robust and resumable scraper that collects agriculture-related research papers
 agritech-news-agent/
 │
 ├── app/
+│   ├── config.py
+│   ├── db.py
 │   ├── __init__.py
-│   ├── config.py          # App-wide configuration
-│   ├── db.py              # DB logic (init, insert, fetch)
-├── scraper/
-│   ├── __init__.py
-│   ├── main.py            # Entry point, handles CLI args and calls scrape
-│   └── scraper.py         # Core scraping logic
-├── .env
-├── .env.example
-├── .gitignore
-├── .dockerignore
+│   ├── scraper/
+│   │   ├── __init__.py
+│   │   ├── api.py
+│   │   ├── scraper.py
+│   │   └── main.py
+│   └── rag/                     
+│       ├── __init__.py
+│       └── api.py
+├── Dockerfile
 ├── docker-compose.yml
 ├── docker.sh
-├── Dockerfile
-├── README.md
-└── requirements.txt
+├── requirements.txt
+└── README.md
 ```
-
 ---
 
 ## ⚙️ Setup Instructions

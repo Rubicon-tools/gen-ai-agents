@@ -44,7 +44,7 @@ case "$1" in
       exit 1
     fi
 
-    docker exec -it $CONTAINER_NAME python scraper/main.py "$ARTICLE_LIMIT" "$CONTINUE_FLAG"
+    docker exec -it $CONTAINER_NAME python app/scraper/main.py "$ARTICLE_LIMIT" "$CONTINUE_FLAG"
     ;;
 
   up)
