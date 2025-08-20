@@ -106,6 +106,27 @@ bash docker.sh scrape 20
 bash docker.sh scrape 20 -continue
 ```
 
+#### 🧩 Run in Background (usually used in production)
+
+To run the scraper in the background (using `nohup`):
+
+```bash
+bash docker.sh scrape -bg
+bash docker.sh scrape 20 -continue -bg
+```
+
+This will run the job in background and save logs to nohup.out.
+
+### ❌ Kill Background Job (usually used in production)
+
+To stop the background scraper:
+
+```bash
+bash docker.sh stop-scraper
+```
+
+This will stop the background scraper.
+
 ---
 
 ## 🧼 Cleanup
