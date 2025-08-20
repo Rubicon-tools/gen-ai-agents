@@ -133,9 +133,10 @@ def scrape(base_url: str, total_articles: int = None, continue_mode: bool = Fals
                     print_duration(duration)
                     return
 
-            uploaded_pdf_url = download_and_upload_pdf(article_id)
-            if uploaded_pdf_url and S3_UPLOAD:
-                parsed["uploaded_file_url"] = uploaded_pdf_url
+            if S3_UPLOAD:
+                uploaded_pdf_url = download_and_upload_pdf(article_id)
+                if uploaded_pdf_url:
+                    parsed["uploaded_file_url"] = uploaded_pdf_url
 
             insert_article(parsed)
             existing_ids.add(article_id)
