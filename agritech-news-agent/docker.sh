@@ -18,7 +18,6 @@ case "$1" in
 
     ARTICLE_LIMIT=10
     CONTINUE_FLAG=""
-    UPDATE_FLAG=""
 
     # Validate and assign arguments
     if [ -z "$2" ]; then
@@ -28,11 +27,9 @@ case "$1" in
       ARTICLE_LIMIT="$2"
       if [ "$3" == "-continue" ]; then
         CONTINUE_FLAG="--continue"
-      elif [ "$3" == "-update" ]; then
-        UPDATE_FLAG="--update"
       elif [ -n "$3" ]; then
         echo "❌ Invalid argument: '$3'"
-        echo "Usage: bash $0 scrape [limit] [-continue|-update]"
+        echo "Usage: bash $0 scrape [limit] [-continue]"
         exit 1
       fi
     elif [ "$2" == "-continue" ]; then
@@ -41,23 +38,13 @@ case "$1" in
         echo "❌ Invalid argument order. Use: bash $0 scrape [limit] [-continue]"
         exit 1
       fi
-    elif [ "$2" == "-update" ]; then
-      UPDATE_FLAG="--update"
-      if [ -n "$3" ]; then
-        echo "❌ Invalid argument order. Use: bash $0 scrape [limit] [-update]"
-        exit 1
-      fi
     else
       echo "❌ Invalid argument: '$2'"
-      echo "Usage: bash $0 scrape [limit] [-continue|-update]"
+      echo "Usage: bash $0 scrape [limit] [-continue]"
       exit 1
     fi
 
-    if [ -n "$UPDATE_FLAG" ]; then
-      docker exec -it $CONTAINER_NAME python app/scraper/main.py "$ARTICLE_LIMIT" "$UPDATE_FLAG"
-    else
-      docker exec -it $CONTAINER_NAME python app/scraper/main.py "$ARTICLE_LIMIT" "$CONTINUE_FLAG"
-    fi
+    docker exec -it $CONTAINER_NAME python app/scraper/main.py "$ARTICLE_LIMIT" "$CONTINUE_FLAG"
     ;;
 
   up)

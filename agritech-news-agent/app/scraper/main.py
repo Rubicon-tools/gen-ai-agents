@@ -7,21 +7,17 @@ if __name__ == "__main__":
     # Default value
     max_articles = 10
     continue_mode = False
-    update_mode = False
+
     if len(args) >= 1:
         if args[0].isdigit():
             max_articles = int(args[0])
             if len(args) > 1 and args[1] == "--continue":
                 continue_mode = True
-            elif len(args) > 1 and args[1] == "--update":
-                update_mode = True
         elif args[0] == "--continue":
             continue_mode = True
-        elif args[0] == "--update":
-            update_mode = True
         else:
             print("❌ Invalid argument.")
-            print("Usage: python main.py [limit] [--continue|--update]")
+            print("Usage: python main.py [limit] [--continue]")
             sys.exit(1)
 
     # Just the query and sort order — no size or start
@@ -29,4 +25,4 @@ if __name__ == "__main__":
         "https://arxiv.org/search/?searchtype=all&query=agriculture&abstracts=show&order=-submitted_date"
     )
 
-    scrape(url, total_articles=max_articles, continue_mode=continue_mode, update_mode=update_mode)
+    scrape(url, total_articles=max_articles, continue_mode=continue_mode)

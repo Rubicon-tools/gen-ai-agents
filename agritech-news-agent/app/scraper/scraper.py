@@ -2,9 +2,8 @@ import time
 import math
 import random
 import requests
-from bs4 import BeautifulSoup
-from bs4.element import NavigableString
-from app.db import insert_article, init_db, get_all_article_ids, get_latest_submission_date
+from bs4 import BeautifulSoup, NavigableString
+from app.db import insert_article, init_db, get_all_article_ids
 
 BASE_URL = "https://arxiv.org"
 PAGE_SIZE = 25
@@ -49,7 +48,7 @@ def parse_article(article):
         return None
 
 
-def scrape(base_url: str, total_articles: int = None, continue_mode: bool = False, update_mode: bool = False): # type: ignore
+def scrape(base_url: str, total_articles: int = None, continue_mode: bool = False):
     print(f"🚜 Starting agritech-news-agent scraper...")
     init_db()
 
@@ -60,10 +59,6 @@ def scrape(base_url: str, total_articles: int = None, continue_mode: bool = Fals
     print("📦 Preloading existing article IDs...")
     existing_ids = get_all_article_ids()
     print(f"✅ Loaded {len(existing_ids)} existing articles from DB.")
-
-    print("📦 Getting latest submission date...")
-    latest_db_date = get_latest_submission_date()
-    print(f"✅ Loaded {latest_db_date} submission date from DB.")
 
     total_pages = math.ceil(total_articles / PAGE_SIZE)
     scraped = 0
@@ -106,30 +101,18 @@ def scrape(base_url: str, total_articles: int = None, continue_mode: bool = Fals
                 break
 
             article_id = parsed["article_id"]
-            if update_mode:
-                
-                if latest_db_date and parsed.get("submission_date") and parsed["submission_date"] < latest_db_date: # type: ignore
-                    print(f"🛑 Reached article with submission_date < latest in DB ({parsed['submission_date']}). Stopping.") # type: ignore
-                    return
-                if article_id in existing_ids:
+            if article_id in existing_ids:
+                if continue_mode:
                     print(f"⏭️ Skipping existing article_id: {article_id}")
+                    scraped += 1  # still counts toward limit
                     continue
-                insert_article(parsed)
-                existing_ids.add(article_id)
-                scraped += 1
-            else:
-                if article_id in existing_ids:
-                    if continue_mode:
-                        print(f"⏭️ Skipping existing article_id: {article_id}")
-                        scraped += 1
-                        continue
-                    else:
-                        print(f"🛑 Found already scraped article_id: {article_id}. Stopping.")
-                        return
+                else:
+                    print(f"🛑 Found already scraped article_id: {article_id}. Stopping.")
+                    return
 
-                insert_article(parsed)
-                existing_ids.add(article_id)
-                scraped += 1
+            insert_article(parsed)
+            existing_ids.add(article_id)
+            scraped += 1
 
             if scraped % PROGRESS_EVERY == 0:
                 print(f"📊 Progress: {scraped}/{total_articles} articles saved")
