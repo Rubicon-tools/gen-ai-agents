@@ -89,3 +89,12 @@ def get_all_article_ids() -> set:
     cur.close()
     conn.close()
     return set(row[0] for row in rows)
+
+def get_latest_submission_date():
+    conn = get_connection()
+    cur = conn.cursor()
+    cur.execute(f"SELECT submission_date FROM {TABLE_NAME} WHERE submission_date IS NOT NULL ORDER BY submission_date DESC LIMIT 1;")
+    row = cur.fetchone()
+    cur.close()
+    conn.close()
+    return row[0] if row else None
