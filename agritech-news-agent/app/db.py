@@ -29,7 +29,8 @@ def init_db():
             abstract TEXT,
             submission_date TEXT,
             originally_announced TEXT,
-            pdf_url TEXT
+            pdf_url TEXT,
+            uploaded_file_url TEXT
         );
     """)
     conn.commit()
@@ -43,8 +44,8 @@ def insert_article(article):
 
     try:
         cur.execute("""
-            INSERT INTO articles (article_id, title, authors, abstract, submission_date, originally_announced, pdf_url)
-            VALUES (%s, %s, %s, %s, %s, %s, %s)
+            INSERT INTO articles (article_id, title, authors, abstract, submission_date, originally_announced, pdf_url, uploaded_file_url)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
             ON CONFLICT (article_id) DO NOTHING;
         """, (
             article["article_id"],
@@ -53,7 +54,8 @@ def insert_article(article):
             article["abstract"],
             article["submission_date"],
             article["originally_announced"],
-            article["pdf_url"]
+            article["pdf_url"],
+            article["uploaded_file_url"]
         ))
         conn.commit()
         print(f"📝 Saved: {article['article_id']}")
