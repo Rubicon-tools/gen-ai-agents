@@ -12,6 +12,16 @@ PAGE_SIZE = 25
 PROGRESS_EVERY = 1
 TEMP_PDF_DIR = "/tmp"
 
+def print_duration(seconds):
+    if seconds < 60:
+        print(f"🕒 Time spent: {seconds:.2f} seconds")
+    elif seconds < 3600:
+        minutes = seconds / 60
+        print(f"🕒 Time spent: {minutes:.2f} minutes")
+    else:
+        hours = seconds / 3600
+        print(f"🕒 Time spent: {hours:.2f} hours")
+
 def parse_article(article):
     try:
         arxiv_id = article.find("p", class_="list-title").a.text.strip().replace("arXiv:", "")
@@ -69,6 +79,7 @@ def download_and_upload_pdf(arxiv_id):
         return None
 
 def scrape(base_url: str, total_articles: int = None, continue_mode: bool = False):
+    start_time = time.time()
     print(f"🚜 Starting agritech-news-agent scraper...")
     init_db()
 
@@ -127,9 +138,11 @@ def scrape(base_url: str, total_articles: int = None, continue_mode: bool = Fals
                     continue
                 else:
                     print(f"🚫 Found already scraped article_id: {article_id}. Stopping.")
+                    end_time = time.time()
+                    duration = end_time - start_time
+                    print_duration(duration)
                     return
 
-            # Upload PDF first
             uploaded_pdf_url = download_and_upload_pdf(article_id)
             if uploaded_pdf_url:
                 parsed["pdf_url"] = uploaded_pdf_url
@@ -144,4 +157,7 @@ def scrape(base_url: str, total_articles: int = None, continue_mode: bool = Fals
             time.sleep(0.5)
             time.sleep(random.uniform(1.2, 2.5))
 
+    end_time = time.time()
+    duration = end_time - start_time
     print(f"\n✅ Done. Scraped and saved {scraped} article(s).")
+    print_duration(duration)
