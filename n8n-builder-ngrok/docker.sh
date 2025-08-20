@@ -80,11 +80,6 @@ fetch_ngrok_url() {
 pull_ollama_models() {
   echo -e "${CYAN}🧠 Ensuring Ollama models are pulled...${NC}"
   docker exec ollama ollama pull gemma:2b
-  docker exec ollama ollama pull llama3
-  docker exec ollama ollama pull llava
-  docker exec ollama ollama pull nous-hermes2
-  docker exec ollama ollama pull mistral
-  docker exec ollama ollama pull mistral:7b
 }
 
 # ────── MAIN ──────
@@ -95,7 +90,7 @@ case "$1" in
     echo -e "${GREEN}▶ Starting all containers...${NC}"
     docker compose up -d
 
-    pull_ollama_models
+    # pull_ollama_models
 
     sleep 8
 
