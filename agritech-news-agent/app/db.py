@@ -17,7 +17,7 @@ def get_connection():
 
 def init_db():
     conn = get_connection()
-    cur = conn.cursor()
+    cur = conn.cursor(cursor_factory=RealDictCursor)
 
     cur.execute(f"""
 
@@ -30,7 +30,8 @@ def init_db():
             submission_date TEXT,
             originally_announced TEXT,
             pdf_url TEXT,
-            uploaded_file_url TEXT
+            uploaded_file_url TEXT,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         );
     """)
     conn.commit()
@@ -40,7 +41,7 @@ def init_db():
 
 def insert_article(article):
     conn = get_connection()
-    cur = conn.cursor()
+    cur = conn.cursor(cursor_factory=RealDictCursor)
 
     try:
         cur.execute("""
@@ -65,29 +66,11 @@ def insert_article(article):
         cur.close()
         conn.close()
 
-def get_latest_article_id():
-    conn = get_connection()
-    cur = conn.cursor()
-    cur.execute("SELECT article_id FROM articles ORDER BY id DESC LIMIT 1;")
-    row = cur.fetchone()
-    cur.close()
-    conn.close()
-    return float(row[0]) if row else None
-
-def article_exists(article_id: str) -> bool:
-    conn = get_connection()
-    cur = conn.cursor()
-    cur.execute("SELECT 1 FROM articles WHERE article_id = %s LIMIT 1", (article_id,))
-    exists = cur.fetchone() is not None
-    cur.close()
-    conn.close()
-    return exists
-
 def get_all_article_ids() -> set:
     conn = get_connection()
-    cur = conn.cursor()
+    cur = conn.cursor(cursor_factory=RealDictCursor)
     cur.execute("SELECT article_id FROM articles")
     rows = cur.fetchall()
     cur.close()
     conn.close()
-    return set(row[0] for row in rows)
+    return set(row["article_id"] for row in rows)
