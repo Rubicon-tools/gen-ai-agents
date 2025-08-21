@@ -316,7 +316,7 @@ html_content += generate_heatmap_html(issues)
 html_content += generate_distribution_charts_side_by_side(issues)
 
 morocco_time = datetime.now(ZoneInfo("Africa/Casablanca"))
-timestamp = morocco_time.strftime("%d-%m-%Y-%H:%M")
+timestamp = morocco_time.strftime("%d-%m-%Y_%H-%M")
 filename = f"jira_report_{timestamp}.pdf"
 
 output_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'reports', filename)

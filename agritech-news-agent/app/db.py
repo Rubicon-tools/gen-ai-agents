@@ -17,19 +17,20 @@ def get_connection():
 
 def init_db():
     conn = get_connection()
-    cur = conn.cursor()
+    cur = conn.cursor(cursor_factory=RealDictCursor)
 
     cur.execute(f"""
-
         CREATE TABLE IF NOT EXISTS {TABLE_NAME} (
-            id SERIAL PRIMARY KEY,
+            id SERIAL PRIMARY KEY UNIQUE,
             article_id TEXT UNIQUE,
             title TEXT,
             authors TEXT,
             abstract TEXT,
             submission_date TEXT,
             originally_announced TEXT,
-            pdf_url TEXT
+            pdf_url TEXT,
+            uploaded_file_url TEXT,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         );
     """)
     conn.commit()
@@ -39,12 +40,16 @@ def init_db():
 
 def insert_article(article):
     conn = get_connection()
-    cur = conn.cursor()
+    cur = conn.cursor(cursor_factory=RealDictCursor)
 
     try:
         cur.execute("""
-            INSERT INTO articles (article_id, title, authors, abstract, submission_date, originally_announced, pdf_url)
-            VALUES (%s, %s, %s, %s, %s, %s, %s)
+            INSERT INTO articles (
+                article_id, title, authors, abstract,
+                submission_date, originally_announced,
+                pdf_url, uploaded_file_url
+            )
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
             ON CONFLICT (article_id) DO NOTHING;
         """, (
             article["article_id"],
@@ -53,7 +58,8 @@ def insert_article(article):
             article["abstract"],
             article["submission_date"],
             article["originally_announced"],
-            article["pdf_url"]
+            article["pdf_url"],
+            article["uploaded_file_url"]
         ))
         conn.commit()
         print(f"📝 Saved: {article['article_id']}")
@@ -63,29 +69,11 @@ def insert_article(article):
         cur.close()
         conn.close()
 
-def get_latest_article_id():
-    conn = get_connection()
-    cur = conn.cursor()
-    cur.execute("SELECT article_id FROM articles ORDER BY id DESC LIMIT 1;")
-    row = cur.fetchone()
-    cur.close()
-    conn.close()
-    return float(row[0]) if row else None
-
-def article_exists(article_id: str) -> bool:
-    conn = get_connection()
-    cur = conn.cursor()
-    cur.execute("SELECT 1 FROM articles WHERE article_id = %s LIMIT 1", (article_id,))
-    exists = cur.fetchone() is not None
-    cur.close()
-    conn.close()
-    return exists
-
 def get_all_article_ids() -> set:
     conn = get_connection()
-    cur = conn.cursor()
+    cur = conn.cursor(cursor_factory=RealDictCursor)
     cur.execute("SELECT article_id FROM articles")
     rows = cur.fetchall()
     cur.close()
     conn.close()
-    return set(row[0] for row in rows)
+    return set(row["article_id"] for row in rows)
