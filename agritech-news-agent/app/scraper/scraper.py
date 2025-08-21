@@ -93,9 +93,6 @@ def scrape(base_url: str, total_articles: int = None, continue_mode: bool = Fals
             if parse_article(article) is not None
         ]
 
-        # Sort newest first
-        parsed_articles.sort(key=lambda a: float(a['article_id']), reverse=True)
-
         for parsed in parsed_articles:
             if scraped >= total_articles:
                 break

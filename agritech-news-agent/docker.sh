@@ -16,7 +16,7 @@ case "$1" in
   scrape)
     echo "📄 Running scraper inside the container..."
 
-    ARTICLE_LIMIT=10
+    ARTICLE_LIMIT=25
     CONTINUE_FLAG=""
 
     # Validate and assign arguments
