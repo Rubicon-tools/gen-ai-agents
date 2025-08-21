@@ -20,31 +20,34 @@ def print_duration(seconds):
     if seconds < 60:
         print(f"🕒 Time spent: {seconds:.2f} seconds")
     elif seconds < 3600:
-        minutes = seconds / 60
-        print(f"🕒 Time spent: {minutes:.2f} minutes")
+        print(f"🕒 Time spent: {seconds / 60:.2f} minutes")
     else:
-        hours = seconds / 3600
-        print(f"🕒 Time spent: {hours:.2f} hours")
+        print(f"🕒 Time spent: {seconds / 3600:.2f} hours")
 
 def parse_article(article):
     try:
         arxiv_id = article.find("p", class_="list-title").a.text.strip().replace("arXiv:", "")
         title = article.find("p", class_="title").text.strip()
         authors = ", ".join(a.text.strip() for a in article.find("p", class_="authors").find_all("a"))
+
         abstract_block = article.find("span", class_="abstract-full")
         abstract = abstract_block.text.strip().replace("△ Less", "") if abstract_block else ""
+
         # Submission date
         submission_date = ""
         date_block = article.find("p", class_="is-size-7")
         if date_block and "Submitted" in date_block.text:
             submission_date = date_block.text.split("Submitted")[1].split(";")[0].strip()
+
         # Originally announced
         originally_announced = ""
         announced_tag = date_block.find("span", string="originally announced")
         if announced_tag and isinstance(announced_tag.next_sibling, NavigableString):
             originally_announced = announced_tag.next_sibling.strip().rstrip(".")
+
         # PDF URL
         pdf_url = f"{BASE_URL}/pdf/{arxiv_id}"
+
         return {
             "article_id": arxiv_id,
             "title": title,
@@ -85,11 +88,14 @@ def scrape(base_url: str, total_articles: int = None, continue_mode: bool = Fals
     if not total_articles or total_articles <= 0:
         print("❌ total_articles must be a positive integer.")
         return
+
     print("📦 Preloading existing article IDs...")
     existing_ids = get_all_article_ids()
     print(f"✅ Loaded {len(existing_ids)} existing articles from DB.")
+
     total_pages = math.ceil(total_articles / PAGE_SIZE)
     scraped = 0
+
     for page in range(total_pages):
         if scraped >= total_articles:
             break
@@ -103,34 +109,36 @@ def scrape(base_url: str, total_articles: int = None, continue_mode: bool = Fals
         except Exception as e:
             print(f"❌ Failed to fetch page {page + 1}: {e}")
             continue
+
         if response.status_code != 200:
             print(f"❌ HTTP {response.status_code} on page {page + 1}")
             continue
+
         soup = BeautifulSoup(response.text, "html.parser")
         results = soup.find_all("li", class_="arxiv-result")
         if not results:
             print("⚠️ No articles found on this page.")
             break
-        parsed_articles = [
-            parse_article(article)
-            for article in results
-            if parse_article(article) is not None
-        ]
+
+        parsed_articles = []
+        for article in results:
+            parsed = parse_article(article)
+            if parsed:
+                parsed_articles.append(parsed)
 
         for parsed in parsed_articles:
             if scraped >= total_articles:
                 break
+
             article_id = parsed["article_id"]
             if article_id in existing_ids:
                 if continue_mode:
                     print(f"⏭️  Skipping existing article_id: {article_id}")
-                    scraped += 1  # still counts toward limit
+                    scraped += 1
                     continue
                 else:
                     print(f"🛑 Found already scraped article_id: {article_id}. Stopping.")
-                    end_time = time.time()
-                    duration = end_time - start_time
-                    print_duration(duration)
+                    print_duration(time.time() - start_time)
                     return
 
             if S3_UPLOAD:
@@ -148,7 +156,5 @@ def scrape(base_url: str, total_articles: int = None, continue_mode: bool = Fals
             time.sleep(0.5)
             time.sleep(random.uniform(1.2, 2.5))
 
-    end_time = time.time()
-    duration = end_time - start_time
     print(f"\n✅ Done. Scraped and saved {scraped} article(s).")
-    print_duration(duration)
+    print_duration(time.time() - start_time)

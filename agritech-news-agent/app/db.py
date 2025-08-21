@@ -20,7 +20,6 @@ def init_db():
     cur = conn.cursor(cursor_factory=RealDictCursor)
 
     cur.execute(f"""
-
         CREATE TABLE IF NOT EXISTS {TABLE_NAME} (
             id SERIAL PRIMARY KEY,
             article_id TEXT UNIQUE,
@@ -45,7 +44,11 @@ def insert_article(article):
 
     try:
         cur.execute("""
-            INSERT INTO articles (article_id, title, authors, abstract, submission_date, originally_announced, pdf_url, uploaded_file_url)
+            INSERT INTO articles (
+                article_id, title, authors, abstract,
+                submission_date, originally_announced,
+                pdf_url, uploaded_file_url
+            )
             VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
             ON CONFLICT (article_id) DO NOTHING;
         """, (

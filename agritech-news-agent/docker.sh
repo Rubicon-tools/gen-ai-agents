@@ -20,7 +20,6 @@ case "$1" in
     CONTINUE_FLAG=""
     BACKGROUND="false"
 
-    # Parse arguments
     for arg in "$@"; do
       case "$arg" in
         -continue)
@@ -33,7 +32,7 @@ case "$1" in
           ARTICLE_LIMIT="$arg"
           ;;
         scrape)
-          ;; # skip positional command
+          ;; # skip
         *)
           echo "❌ Invalid argument: '$arg'"
           echo "Usage: bash $0 scrape [limit] [-continue] [-bg]"
@@ -42,13 +41,51 @@ case "$1" in
       esac
     done
 
+    CMD="python app/scraper/main.py $ARTICLE_LIMIT $CONTINUE_FLAG"
+
     if [ "$BACKGROUND" = "true" ]; then
       echo "🧵 Running in background with nohup..."
-      nohup docker exec $CONTAINER_NAME python app/scraper/main.py "$ARTICLE_LIMIT" "$CONTINUE_FLAG" > logs/scraper.out 2>&1 &
+      nohup docker exec $CONTAINER_NAME $CMD > logs/scraper.out 2>&1 &
       echo "📌 Background PID: $!"
       echo "📝 Logs: logs/scraper.out"
     else
-      docker exec -it $CONTAINER_NAME python app/scraper/main.py "$ARTICLE_LIMIT" "$CONTINUE_FLAG"
+      docker exec -it $CONTAINER_NAME $CMD
+    fi
+    ;;
+
+  scrape-newest)
+    echo "📰 Scraping newest articles (most recent first)..."
+
+    CONTINUE_FLAG=""
+    BACKGROUND="false"
+
+    for arg in "$@"; do
+      case "$arg" in
+        -continue)
+          CONTINUE_FLAG="--continue"
+          ;;
+        -bg)
+          BACKGROUND="true"
+          ;;
+        scrape-newest)
+          ;; # skip
+        *)
+          echo "❌ Invalid argument: '$arg'"
+          echo "Usage: bash $0 scrape-newest [-continue] [-bg]"
+          exit 1
+          ;;
+      esac
+    done
+
+    CMD="python app/scraper/main.py --newest $CONTINUE_FLAG"
+
+    if [ "$BACKGROUND" = "true" ]; then
+      echo "🧵 Running in background with nohup..."
+      nohup docker exec $CONTAINER_NAME $CMD > logs/scraper-newest.out 2>&1 &
+      echo "📌 Background PID: $!"
+      echo "📝 Logs: logs/scraper-newest.out"
+    else
+      docker exec -it $CONTAINER_NAME $CMD
     fi
     ;;
 
@@ -68,7 +105,13 @@ case "$1" in
     ;;
 
   *)
-    echo "Usage: bash $0 {build|scrape [limit] [-continue] [-bg]|stop-scraper|up|stop}"
+    echo "Usage:"
+    echo "  bash $0 build"
+    echo "  bash $0 up"
+    echo "  bash $0 stop"
+    echo "  bash $0 scrape [limit] [-continue] [-bg]"
+    echo "  bash $0 scrape-newest [-continue] [-bg]"
+    echo "  bash $0 stop-scraper"
     exit 1
     ;;
 esac
