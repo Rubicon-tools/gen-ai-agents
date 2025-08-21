@@ -21,7 +21,7 @@ def init_db():
 
     cur.execute(f"""
         CREATE TABLE IF NOT EXISTS {TABLE_NAME} (
-            id SERIAL PRIMARY KEY,
+            id SERIAL PRIMARY KEY UNIQUE,
             article_id TEXT UNIQUE,
             title TEXT,
             authors TEXT,

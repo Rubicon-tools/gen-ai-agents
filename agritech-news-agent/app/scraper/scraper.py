@@ -80,65 +80,47 @@ def download_and_upload_pdf(arxiv_id):
         print(f"❌ Error downloading/uploading PDF for {arxiv_id}: {e}")
         return None
 
-def scrape(base_url: str, total_articles: int = None, continue_mode: bool = False, reverse_within_page: bool = False):
+def scrape(base_url: str, total_articles: int = None, continue_mode: bool = False, newest: bool = False):
     start_time = time.time()
     print(f"🚜 Starting agritech-news-agent scraper...")
     init_db()
 
-    if not total_articles or total_articles <= 0:
-        print("❌ total_articles must be a positive integer.")
+    if not newest and (not total_articles or total_articles <= 0):
+        print("❌ total_articles must be a positive integer when newest=False.")
         return
 
     print("📦 Preloading existing article IDs...")
     existing_ids = get_all_article_ids()
     print(f"✅ Loaded {len(existing_ids)} existing articles from DB.")
 
-    total_pages = math.ceil(total_articles / PAGE_SIZE)
     scraped = 0
 
-    for page in range(total_pages):
-        if scraped >= total_articles:
-            break
-
-        start = page * PAGE_SIZE
-        paged_url = f"{base_url}&size={PAGE_SIZE}&start={start}"
-        print(f"\n🔍 Scraping page {page + 1}:\n{paged_url}\n")
+    if newest:
+        # Only fetch the first page
+        paged_url = f"{base_url}&size={PAGE_SIZE}&start=0"
+        print(f"\n🔍 Scraping page 1:\n{paged_url}\n")
 
         try:
             response = requests.get(paged_url)
+            response.raise_for_status()
         except Exception as e:
-            print(f"❌ Failed to fetch page {page + 1}: {e}")
-            continue
-
-        if response.status_code != 200:
-            print(f"❌ HTTP {response.status_code} on page {page + 1}")
-            continue
+            print(f"❌ Failed to fetch newest page: {e}")
+            return
 
         soup = BeautifulSoup(response.text, "html.parser")
         results = soup.find_all("li", class_="arxiv-result")
         if not results:
             print("⚠️ No articles found on this page.")
-            break
+            return
 
         parsed_articles = [parse_article(article) for article in results if parse_article(article) is not None]
-
-        if reverse_within_page:
-            parsed_articles.reverse()
+        parsed_articles.reverse()  # Optional: newest at the end
 
         for parsed in parsed_articles:
-            if scraped >= total_articles:
-                break
-
             article_id = parsed["article_id"]
             if article_id in existing_ids:
-                if continue_mode:
-                    print(f"⏭️  Skipping existing article_id: {article_id}")
-                    scraped += 1
-                    continue
-                else:
-                    print(f"🛑 Found already scraped article_id: {article_id}. Stopping.")
-                    print_duration(time.time() - start_time)
-                    return
+                print(f"⏭️  Skipping existing article_id: {article_id}")
+                continue
 
             if S3_UPLOAD:
                 uploaded_pdf_url = download_and_upload_pdf(article_id)
@@ -148,12 +130,65 @@ def scrape(base_url: str, total_articles: int = None, continue_mode: bool = Fals
             insert_article(parsed)
             existing_ids.add(article_id)
             scraped += 1
+            print(f"📊 Progress: {scraped} article(s) saved")
 
-            if scraped % PROGRESS_EVERY == 0:
-                print(f"📊 Progress: {scraped}/{total_articles} articles saved")
-
-            time.sleep(0.5)
             time.sleep(random.uniform(1.2, 2.5))
+
+    else:
+        # Standard pagination scraping
+        total_pages = math.ceil(total_articles / PAGE_SIZE)
+
+        for page in range(total_pages):
+            if scraped >= total_articles:
+                break
+
+            start = page * PAGE_SIZE
+            paged_url = f"{base_url}&size={PAGE_SIZE}&start={start}"
+            print(f"\n🔍 Scraping page {page + 1}:\n{paged_url}\n")
+
+            try:
+                response = requests.get(paged_url)
+                response.raise_for_status()
+            except Exception as e:
+                print(f"❌ Failed to fetch page {page + 1}: {e}")
+                continue
+
+            soup = BeautifulSoup(response.text, "html.parser")
+            results = soup.find_all("li", class_="arxiv-result")
+            if not results:
+                print("⚠️ No articles found on this page.")
+                break
+
+            parsed_articles = [parse_article(article) for article in results if parse_article(article) is not None]
+
+            for parsed in parsed_articles:
+                if scraped >= total_articles:
+                    break
+
+                article_id = parsed["article_id"]
+                if article_id in existing_ids:
+                    if continue_mode:
+                        print(f"⏭️  Skipping existing article_id: {article_id}")
+                        scraped += 1
+                        continue
+                    else:
+                        print(f"🛑 Found already scraped article_id: {article_id}. Stopping.")
+                        print_duration(time.time() - start_time)
+                        return
+
+                if S3_UPLOAD:
+                    uploaded_pdf_url = download_and_upload_pdf(article_id)
+                    if uploaded_pdf_url:
+                        parsed["uploaded_file_url"] = uploaded_pdf_url
+
+                insert_article(parsed)
+                existing_ids.add(article_id)
+                scraped += 1
+
+                if scraped % PROGRESS_EVERY == 0:
+                    print(f"📊 Progress: {scraped}/{total_articles} articles saved")
+
+                time.sleep(random.uniform(1.2, 2.5))
 
     print(f"\n✅ Done. Scraped and saved {scraped} article(s).")
     print_duration(time.time() - start_time)

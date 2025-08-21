@@ -7,7 +7,7 @@ def scrape_all_articles(limit, continue_mode):
     Used for initial bulk ingestion.
     """
     url = "https://arxiv.org/search/?searchtype=all&query=agriculture&abstracts=show&order=submitted_date"
-    scrape(url, total_articles=limit, continue_mode=continue_mode)
+    scrape(url, total_articles=limit, continue_mode=continue_mode, newest=False)
 
 def scrape_newest_articles(limit, continue_mode):
     """
@@ -17,7 +17,7 @@ def scrape_newest_articles(limit, continue_mode):
     To preserve order in DB, reverse insert within page.
     """
     url = "https://arxiv.org/search/?searchtype=all&query=agriculture&abstracts=show&order=-submitted_date"
-    scrape(url, total_articles=limit, continue_mode=continue_mode, reverse_within_page=True)
+    scrape(url, total_articles=limit, continue_mode=continue_mode, newest=True)
 
 if __name__ == "__main__":
     args = sys.argv[1:]

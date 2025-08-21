@@ -56,14 +56,10 @@ case "$1" in
   scrape-newest)
     echo "📰 Scraping newest articles (most recent first)..."
 
-    CONTINUE_FLAG=""
     BACKGROUND="false"
 
     for arg in "$@"; do
       case "$arg" in
-        -continue)
-          CONTINUE_FLAG="--continue"
-          ;;
         -bg)
           BACKGROUND="true"
           ;;
@@ -71,13 +67,13 @@ case "$1" in
           ;; # skip
         *)
           echo "❌ Invalid argument: '$arg'"
-          echo "Usage: bash $0 scrape-newest [-continue] [-bg]"
+          echo "Usage: bash $0 scrape-newest [-bg]"
           exit 1
           ;;
       esac
     done
 
-    CMD="python app/scraper/main.py --newest $CONTINUE_FLAG"
+    CMD="python app/scraper/main.py --newest --continue"
 
     if [ "$BACKGROUND" = "true" ]; then
       echo "🧵 Running in background with nohup..."
@@ -110,7 +106,7 @@ case "$1" in
     echo "  bash $0 up"
     echo "  bash $0 stop"
     echo "  bash $0 scrape [limit] [-continue] [-bg]"
-    echo "  bash $0 scrape-newest [-continue] [-bg]"
+    echo "  bash $0 scrape-newest [-bg]"
     echo "  bash $0 stop-scraper"
     exit 1
     ;;
