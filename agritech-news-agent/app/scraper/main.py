@@ -14,9 +14,10 @@ def scrape_newest_articles(limit, continue_mode):
     Scrape newest articles from newest to oldest.
     Used for daily updates.
     'continue_mode' is optional and disabled by default.
+    To preserve order in DB, reverse insert within page.
     """
     url = "https://arxiv.org/search/?searchtype=all&query=agriculture&abstracts=show&order=-submitted_date"
-    scrape(url, total_articles=limit, continue_mode=continue_mode)
+    scrape(url, total_articles=limit, continue_mode=continue_mode, reverse_within_page=True)
 
 if __name__ == "__main__":
     args = sys.argv[1:]

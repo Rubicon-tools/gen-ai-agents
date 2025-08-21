@@ -80,7 +80,7 @@ def download_and_upload_pdf(arxiv_id):
         print(f"❌ Error downloading/uploading PDF for {arxiv_id}: {e}")
         return None
 
-def scrape(base_url: str, total_articles: int = None, continue_mode: bool = False):
+def scrape(base_url: str, total_articles: int = None, continue_mode: bool = False, reverse_within_page: bool = False):
     start_time = time.time()
     print(f"🚜 Starting agritech-news-agent scraper...")
     init_db()
@@ -120,11 +120,10 @@ def scrape(base_url: str, total_articles: int = None, continue_mode: bool = Fals
             print("⚠️ No articles found on this page.")
             break
 
-        parsed_articles = []
-        for article in results:
-            parsed = parse_article(article)
-            if parsed:
-                parsed_articles.append(parsed)
+        parsed_articles = [parse_article(article) for article in results if parse_article(article) is not None]
+
+        if reverse_within_page:
+            parsed_articles.reverse()
 
         for parsed in parsed_articles:
             if scraped >= total_articles:
