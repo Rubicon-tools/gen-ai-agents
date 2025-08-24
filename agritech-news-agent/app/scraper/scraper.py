@@ -64,13 +64,14 @@ def parse_article(article):
 
 def download_and_upload_pdf(arxiv_id):
     pdf_url = f"{BASE_URL}/pdf/{arxiv_id}"
-    local_path = os.path.join(TEMP_PDF_DIR, f"{arxiv_id}.pdf")
+    safe_arxiv_id = arxiv_id.replace("/", "_")  # Replace '/' with '_'
+    local_path = os.path.join(TEMP_PDF_DIR, f"{safe_arxiv_id}.pdf")
     try:
         response = requests.get(pdf_url)
         if response.status_code == 200:
             with open(local_path, "wb") as f:
                 f.write(response.content)
-            uploaded_url = upload_pdf_to_spaces(local_path, object_name=f"{arxiv_id}.pdf")
+            uploaded_url = upload_pdf_to_spaces(local_path, object_name=f"{safe_arxiv_id}.pdf")
             os.remove(local_path)
             return uploaded_url
         else:
@@ -123,9 +124,13 @@ def scrape(base_url: str, total_articles: int = None, continue_mode: bool = Fals
                 continue
 
             if S3_UPLOAD:
+                print(f"📄 Downloading and uploading PDF for {article_id}...")
                 uploaded_pdf_url = download_and_upload_pdf(article_id)
                 if uploaded_pdf_url:
                     parsed["uploaded_file_url"] = uploaded_pdf_url
+                    print(f"✅ Uploaded PDF for {article_id}")
+                else:
+                    print(f"❌ Failed to upload PDF for {article_id}")
 
             insert_article(parsed)
             existing_ids.add(article_id)
@@ -177,9 +182,13 @@ def scrape(base_url: str, total_articles: int = None, continue_mode: bool = Fals
                         return
 
                 if S3_UPLOAD:
+                    print(f"📄 Downloading and uploading PDF for {article_id}...")
                     uploaded_pdf_url = download_and_upload_pdf(article_id)
                     if uploaded_pdf_url:
                         parsed["uploaded_file_url"] = uploaded_pdf_url
+                        print(f"✅ Uploaded PDF for {article_id}")
+                    else:
+                        print(f"❌ Failed to upload PDF for {article_id}")
 
                 insert_article(parsed)
                 existing_ids.add(article_id)
