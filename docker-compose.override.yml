@@ -9,8 +9,11 @@ services:
       - "9002:3000"
     environment:
       # Required Outline env
-      URL: "http://localhost:3000"
+      URL: "http://localhost:9002"
+      PUBLIC_URL: "http://localhost:9002"
+      FORCE_HTTPS: "false"
       HOST: "0.0.0.0"
+      PORT: "3000"
       SECRET_KEY: "7b83c22ee4e8ccf624c4b25d6f10cb4d4b8aa760b0b2eaa38db90c95d847d839"
       UTILS_SECRET: "local-utils-secret"
 
