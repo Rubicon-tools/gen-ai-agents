@@ -1,4 +1,3 @@
-version: "3.8"
 services:
   outline-app:
     image: outlinewiki/outline:0.82.0
@@ -6,12 +5,24 @@ services:
     restart: unless-stopped
     environment:
       - NODE_ENV=${OUTLINE_NODE_ENV}
-      - URL=https://${OUTLINE_APP_HOSTNAME}/docs
+      - URL=${OUTLINE_APP_HOSTNAME}
+      - PUBLIC_URL=${OUTLINE_APP_HOSTNAME}
+      - HOST=0.0.0.0
+      - PORT=3002
       - DATABASE_URL=postgres://${OUTLINE_POSTGRES_USER}:${OUTLINE_POSTGRES_PASSWORD}@outline-postgres:5432/${OUTLINE_POSTGRES_DB}
       - REDIS_URL=redis://outline-redis:6379
       - SECRET_KEY=${OUTLINE_APP_SECRET_KEY}
       - UTILS_SECRET=${OUTLINE_APP_UTILS_SECRET}
       - FORCE_HTTPS=${OUTLINE_FORCE_HTTPS}
+      - PGSSLMODE=${OUTLINE_POSTGRES_SSL_MODE}
+
+      # S3 Storage
+      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
+      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
+      - AWS_REGION=${AWS_REGION}
+      - AWS_S3_UPLOAD_BUCKET_URL=${AWS_S3_UPLOAD_BUCKET_URL}
+      - AWS_S3_UPLOAD_BUCKET_NAME=${AWS_S3_UPLOAD_BUCKET_NAME}
+      - AWS_S3_FORCE_PATH_STYLE=${AWS_S3_FORCE_PATH_STYLE}
     volumes:
       - outline_data:/data
     depends_on:
@@ -21,7 +32,7 @@ services:
       - outline
 
   outline-postgres:
-    image: postgres:${OUTLINE_POSTGRES_VERSION}
+    image: postgres:14
     container_name: outline-postgres
     restart: unless-stopped
     environment:
@@ -34,9 +45,23 @@ services:
       - outline
 
   outline-redis:
-    image: redis:${OUTLINE_REDIS_VERSION}
+    image: redis:6
     container_name: outline-redis
     restart: unless-stopped
+    networks:
+      - outline
+
+  minio-outline:
+    container_name: minio-outline
+    image: minio/minio:latest
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: ${AWS_ACCESS_KEY_ID}
+      MINIO_ROOT_PASSWORD: ${AWS_SECRET_ACCESS_KEY}
+    ports:
+      - "9001:9001"
+    volumes:
+      - minio_data_outline:/data
     networks:
       - outline
 
@@ -58,9 +83,16 @@ services:
 
 networks:
   outline:
+    name: outline
 
 volumes:
   outline_data:
+    name: outline_data
   postgres_data:
+    name: postgres_data
   caddy_data:
+    name: caddy_data
   caddy_config:
+    name: caddy_config
+  minio_data_outline:
+    name: minio_data_outline
