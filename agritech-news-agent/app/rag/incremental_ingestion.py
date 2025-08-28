@@ -1,14 +1,13 @@
 #!/usr/bin/env python3
 """
-Pipeline d'ingestion incrémentale pour le système RAG
-====================================================
+Incremental Ingestion Pipeline for the RAG System
+================================================
 
-Ce script traite uniquement les NOUVEAUX documents PDF et les ajoute
-à la base vectorielle existante, sans dupliquer les documents déjà indexés.
+This script processes only NEW PDF documents and adds them to the existing vector database, without duplicating already indexed documents.
 
-Utilisation:
-- Premier lancement: traite tous les PDFs
-- Lancements suivants: traite seulement les nouveaux PDFs
+Usage:
+- First run: process all PDFs
+- Subsequent runs: process only new PDFs
 """
 
 import warnings
@@ -37,7 +36,7 @@ class IncrementalIngestionPipeline:
         self.collection_name = "rag_collection"
         
     def get_pdf_files_with_hashes(self) -> Dict[str, str]:
-        """Récupère tous les fichiers PDF avec leurs hashes."""
+        """Retrieve all PDF files with their hashes."""
         pdf_files = {}
         for filename in sorted(os.listdir(self.data_dir)):
             if filename.lower().endswith('.pdf'):
@@ -47,56 +46,56 @@ class IncrementalIngestionPipeline:
         return pdf_files
     
     def identify_new_documents(self) -> List[str]:
-        """Identifie les documents qui n'ont pas encore été indexés."""
-        print("🔍 Vérification des documents existants...")
+        """Identify documents that have not yet been indexed."""
+        print("🔍 Checking existing documents...")
         
-        # Récupérer les documents déjà indexés
+        # Retrieve already indexed documents
         existing_docs = get_existing_documents(self.qdrant_client)
         existing_hashes = set(existing_docs.keys())
         
-        # Récupérer tous les PDFs avec leurs hashes
+        # Retrieve all PDFs with their hashes
         all_pdfs = self.get_pdf_files_with_hashes()
         
-        # Identifier les nouveaux documents
+        # Identify new documents
         new_documents = []
         for filename, file_hash in all_pdfs.items():
             if file_hash not in existing_hashes:
                 new_documents.append(filename)
             else:
-                print(f"✅ {filename} - déjà indexé")
+                print(f"✅ {filename} - already indexed")
         
         return new_documents
     
     def process_single_document(self, filename: str) -> Dict[str, Any]:
-        """Traite un seul document PDF."""
+        """Process a single PDF document."""
         file_path = os.path.join(self.data_dir, filename)
         file_hash = get_document_hash(file_path)
         
-        print(f"\n📄 Traitement de: {filename}")
+        print(f"\n📄 Processing: {filename}")
         print(f"🔐 Hash: {file_hash[:8]}...")
         
-        # Extraire le contenu
+        # Extract the content
         try:
             texts = load_pdfs_from_folder(self.data_dir, max_files=None)
-            # Filtrer pour ne garder que le document actuel
+            # Filter to keep only the current document
             current_text = None
             for text in texts:
-                # Vérifier si ce texte correspond au fichier actuel
-                # (approximation basée sur la taille du fichier)
-                if len(text) > 1000:  # Filtre basique
+                # Check if this text corresponds to the current file
+                # (approximation based on file size)
+                if len(text) > 1000:  # Basic filter based on file size
                     current_text = text
                     break
             
             if not current_text:
-                raise ValueError(f"Aucun contenu extrait de {filename}")
+                raise ValueError(f"No content extracted from {filename}")
             
-            # Découper en chunks
+            # Split into chunks
             chunks = split_texts_into_chunks([current_text])
             
-            # Générer les embeddings
+            # Generate embeddings
             embeddings = embed_texts(chunks)
             
-            # Ajouter à la base vectorielle
+            # Add to the vector database
             document_hashes = [file_hash] * len(chunks)
             next_id = upsert_embeddings_incremental(
                 self.qdrant_client, 
@@ -114,7 +113,7 @@ class IncrementalIngestionPipeline:
             }
             
         except Exception as e:
-            print(f"❌ Erreur lors du traitement de {filename}: {e}")
+            print(f"❌ Error processing {filename}: {e}")
             return {
                 "filename": filename,
                 "hash": file_hash,
@@ -122,31 +121,31 @@ class IncrementalIngestionPipeline:
             }
     
     def run(self) -> Dict[str, Any]:
-        """Exécute le pipeline d'ingestion incrémentale."""
-        print("🔧 PIPELINE D'INGESTION INCÉMENTALE RAG")
+        """Execute the incremental ingestion pipeline."""
+        print("🔧 RAG INCREMENTAL INGESTION PIPELINE")
         print("=" * 50)
-        print("Ce script traite uniquement les NOUVEAUX documents PDF.")
-        print(f"📁 Dossier de données: {self.data_dir}")
+        print("This script processes only NEW PDF documents.")
+        print(f"📁 Data directory: {self.data_dir}")
         
-        # Identifier les nouveaux documents
+        # Identify new documents
         new_documents = self.identify_new_documents()
         
         if not new_documents:
-            print("\n✅ Aucun nouveau document à traiter!")
-            print("Tous les PDFs sont déjà indexés.")
+            print("\n✅ No new documents to process!")
+            print("All PDFs are already indexed.")
             return {"status": "no_new_documents"}
         
-        print(f"\n🆕 {len(new_documents)} nouveau(x) document(s) à traiter:")
+        print(f"\n🆕 {len(new_documents)} new document(s) to process:")
         for doc in new_documents:
             print(f"   • {doc}")
         
         # Demander confirmation
         response = input(f"\n🚀 Traiter ces {len(new_documents)} document(s) ? (y/N): ")
         if response.lower() != 'y':
-            print("❌ Annulé par l'utilisateur.")
+            print("❌ Cancelled by the user.")
             return {"status": "cancelled"}
         
-        print(f"\n🚀 DÉMARRAGE DU TRAITEMENT INCÉMENTAL")
+        print(f"\n🚀 STARTING INCREMENTAL INGESTION")
         print("=" * 50)
         
         results = {
@@ -156,46 +155,46 @@ class IncrementalIngestionPipeline:
             "errors": []
         }
         
-        # Traiter chaque nouveau document
+        # Process each new document
         for i, filename in enumerate(new_documents, 1):
-            print(f"\n📄 [{i}/{len(new_documents)}] Traitement de: {filename}")
+            print(f"\n📄 [{i}/{len(new_documents)}] Processing: {filename}")
             
             result = self.process_single_document(filename)
             
             if "error" in result:
                 results["errors"].append(result)
-                print(f"❌ Échec: {result['error']}")
+                print(f"❌ Failure: {result['error']}")
             else:
                 results["processed_documents"].append(result)
-                print(f"✅ Succès: {result['chunks_created']} chunks créés")
+                print(f"✅ Success: {result['chunks_created']} chunks created")
         
         # Résumé final
-        print(f"\n🎉 TRAITEMENT INCÉMENTAL TERMINÉ!")
+        print(f"\n🎉 INCREMENTAL INGESTION COMPLETED!")
         print("=" * 50)
-        print(f"📊 Documents traités: {len(results['processed_documents'])}")
-        print(f"❌ Erreurs: {len(results['errors'])}")
+        print(f"📊 Processed documents: {len(results['processed_documents'])}")
+        print(f"❌ Errors: {len(results['errors'])}")
         
         if results["processed_documents"]:
             total_chunks = sum(doc["chunks_created"] for doc in results["processed_documents"])
-            print(f"🧩 Total chunks ajoutés: {total_chunks}")
+            print(f"🧩 Total chunks added: {total_chunks}")
         
         # Sauvegarder les résultats
         with open("incremental_ingestion_results.json", "w", encoding="utf-8") as f:
             json.dump(results, f, indent=2, ensure_ascii=False)
         
-        print(f"💾 Résultats sauvegardés dans incremental_ingestion_results.json")
+        print(f"💾 Results saved in incremental_ingestion_results.json")
         
         return results
 
 def main():
-    """Point d'entrée principal."""
+    """Main entry point."""
     if len(sys.argv) > 1:
         data_dir = sys.argv[1]
     else:
         data_dir = "data"
     
     if not os.path.exists(data_dir):
-        print(f"❌ Le dossier {data_dir} n'existe pas!")
+        print(f"❌ The {data_dir} directory does not exist!")
         sys.exit(1)
     
     pipeline = IncrementalIngestionPipeline(data_dir)

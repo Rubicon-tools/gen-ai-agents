@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 """
-Système RAG - Interface de question-réponse
-===========================================
+RAG System - Question-Answer Interface
+======================================
 
-Ce script permet de poser des questions sur les documents indexés.
-Assurez-vous d'avoir exécuté ingestion_pipeline.py AVANT d'utiliser ce script.
+This script allows you to ask questions about the indexed documents.
+Make sure to run ingestion_pipeline.py before using this script.
 """
 
 import warnings
@@ -20,81 +20,81 @@ from dotenv import load_dotenv
 
 
 def check_database_status():
-    """Vérifie que la base de données contient des données"""
+    """Check if the database contains data"""
     try:
         client = get_qdrant_client()
         
-        # Vérifier que la collection existe
+        # Check if the collection exists
         collections = client.get_collections()
         if not collections.collections:
-            return False, "Aucune collection trouvée"
+            return False, "No collection found"
         
-        # Vérifier que la collection rag_collection contient des données
+        # Check if the collection rag_collection contains data
         try:
             points_count = client.count("rag_collection").count
             if points_count == 0:
-                return False, "Collection vide - aucun document indexé"
-            return True, f"Collection contient {points_count} chunks"
+                return False, "Empty collection - no documents indexed"
+            return True, f"Collection contains {points_count} chunks"
         except:
-            return False, "Impossible d'accéder à la collection rag_collection"
+            return False, "Unable to access the rag_collection"
             
     except Exception as e:
-        return False, f"Erreur de connexion à la base: {e}"
+        return False, f"Error connecting to the database: {e}"
 
 
 def interactive_qa():
-    """Interface interactive pour poser des questions"""
-    print("🤖 SYSTÈME RAG - MODE QUESTIONS-RÉPONSES")
+    """Interactive interface to ask questions"""
+    print("🤖 RAG SYSTEM - QUESTION-ANSWER MODE")
     print("=" * 50)
-    print("💡 Posez vos questions sur les documents indexés")
-    print("📚 Commandes: 'quit' pour quitter, 'status' pour le statut")
+    print("💡 Ask questions about the indexed documents")
+    print("📚 Commands: 'quit' to exit, 'status' to check the status")
     print()
     
     client = get_qdrant_client()
     
     while True:
         try:
-            question = input("❓ Votre question: ").strip()
+            question = input("❓ Your question: ").strip()
             
             if not question:
                 continue
                 
             if question.lower() in {"exit", "quit", ":q", "q"}:
-                print("👋 Au revoir !")
+                print("👋 Goodbye!")
                 break
                 
             if question.lower() == "status":
-                # Afficher le statut de la base
+                # Display the database status
                 try:
                     points_count = client.count("rag_collection").count
                     collection_info = client.get_collection("rag_collection")
-                    print(f"📊 Statut de la base:")
+                    print(f"📊 Database status:")
                     print(f"   • Collection: {collection_info.status}")
-                    print(f"   • Chunks indexés: {points_count}")
-                    print(f"   • Dimension des vecteurs: {collection_info.config.params.vectors.size}")
+                    print(f"   • Chunks indexed: {points_count}")
+                    print(f"   • Vector dimension: {collection_info.config.params.vectors.size}")
                 except Exception as e:
-                    print(f"❌ Erreur lors de la vérification du statut: {e}")
+                    print(f"❌ Error checking the status: {e}")
                 continue
             
-            # Traiter la question
-            print(f"\n🔍 Recherche en cours...")
+            # Process the question
+            print(f"\n🔍 Searching...")
             
-            # 1. Générer l'embedding de la question
+            # 1. Generate the question embedding
             question_embedding = embed_texts([question])[0]
             
-            # 2. Rechercher les chunks pertinents
+            # 2. Search for relevant chunks
             top_chunks: List[str] = search_top_k(client, question_embedding, k=3)
             
             if not top_chunks:
-                print("❌ Aucun contexte pertinent trouvé")
+                print("❌ No relevant context found")
                 continue
             
-            # 3. Générer la réponse
-            print(f"📄 Contexte trouvé: {len(top_chunks)} chunks")
+            # 3. Generate the answer
+            print(f"📄 Found context: {len(top_chunks)} chunks")
             answer = generate_response(top_chunks, question)
             
-            # 4. Afficher la réponse
-            print(f"\n🤖 Réponse:")
+            # 4. Display the answer
+            print(f"\n🤖 Answer:")
             print("─" * 50)
             print(answer)
             print("─" * 50)
@@ -104,38 +104,38 @@ def interactive_qa():
         except EOFError:
             break
         except KeyboardInterrupt:
-            print("\n👋 Interruption utilisateur")
+            print("\n👋 User interruption")
             break
         except Exception as e:
-            print(f"❌ Erreur: {e}")
-            print("💡 Essayez de reformuler votre question")
+            print(f"❌ Error: {e}")
+            print("💡 Try to reformulate your question")
 
 
 def main():
-    """Point d'entrée principal"""
+    """Main entry point"""
     
-    # Charger les variables d'environnement
+    # Load environment variables
     load_dotenv()
     
-    print("🔍 SYSTÈME RAG - VÉRIFICATION INITIALE")
+    print("🔍 RAG SYSTEM - INITIAL CHECK")
     print("=" * 40)
     
-    # Vérifier que la base de données est prête
+    # Check if the database is ready
     db_ready, status_message = check_database_status()
     
     if not db_ready:
         print(f"❌ {status_message}")
         print("\n💡 SOLUTIONS:")
-        print("   1. Exécutez d'abord: python ingestion_pipeline.py")
-        print("   2. Vérifiez que Qdrant est en cours d'exécution")
-        print("   3. Vérifiez que des documents ont été indexés")
+        print("   1. Run: python ingestion_pipeline.py")
+        print("   2. Check if Qdrant is running")
+        print("   3. Check if documents have been indexed")
         return
     
     print(f"✅ {status_message}")
-    print("🚀 Système RAG prêt pour les questions !")
+    print("🚀 RAG system ready for questions!")
     print()
     
-    # Démarrer l'interface Q&A
+    # Start the Q&A interface
     interactive_qa()
 
 
