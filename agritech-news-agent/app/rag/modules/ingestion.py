@@ -7,28 +7,28 @@ import fitz  # PyMuPDF
 
 def clean_text_preserve_content(text: str) -> str:
     """
-    Nettoie le texte en supprimant uniquement le bruit et les caractères spéciaux.
-    PRÉSERVE TOUTE L'INFORMATION - aucune suppression de contenu.
+    Clean the text by removing only the noise and special characters.
+    PRESERVE ALL INFORMATION - no content deletion.
     """
     if not text:
         return ""
     
-    # 1. Nettoyage des caractères spéciaux et du bruit
+    # 1. Cleaning special characters and noise
     cleaned_text = text
     
-    # Supprimer les caractères de contrôle invisibles
+    # Remove invisible control characters
     cleaned_text = re.sub(r'[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]', '', cleaned_text)
     
-    # Normaliser les espaces multiples (garder le contenu)
+    # Normalize multiple spaces (keep content)
     cleaned_text = re.sub(r'[ \t]+', ' ', cleaned_text)
     
-    # Normaliser les retours à la ligne multiples
+    # Normalize multiple line returns
     cleaned_text = re.sub(r'\n\s*\n\s*\n+', '\n\n', cleaned_text)
     
-    # Nettoyer les espaces en début/fin de ligne
+    # Clean spaces at the beginning/end of line
     cleaned_text = '\n'.join(line.strip() for line in cleaned_text.split('\n'))
     
-    # Supprimer les lignes vides multiples
+    # Remove multiple empty lines
     cleaned_text = re.sub(r'\n{3,}', '\n\n', cleaned_text)
     
     return cleaned_text.strip()
@@ -36,8 +36,8 @@ def clean_text_preserve_content(text: str) -> str:
 
 def extract_pdf_content_ordered(file_path: str) -> str:
     """
-    Extrait le contenu PDF dans l'ordre correct des pages
-    sans supprimer d'informations.
+    Extract the PDF content in the correct order of pages
+    without deleting any information.
     """
     with fitz.open(file_path) as doc:
         extracted_pages = []
@@ -45,27 +45,27 @@ def extract_pdf_content_ordered(file_path: str) -> str:
         for page_num in range(len(doc)):
             page = doc[page_num]
             
-            # Extraire le texte de la page
+            # Extract the text from the page
             page_text = page.get_text("text")
             
-            # Nettoyer uniquement le bruit (pas le contenu)
+            # Clean only the noise (not the content)
             cleaned_page_text = clean_text_preserve_content(page_text)
             
             if cleaned_page_text:
                 extracted_pages.append(cleaned_page_text)
-                print(f"  Page {page_num + 1}: {len(cleaned_page_text)} caractères extraits")
+                print(f"  Page {page_num + 1}: {len(cleaned_page_text)} characters extracted")
             else:
-                print(f"  Page {page_num + 1}: Page vide")
+                print(f"  Page {page_num + 1}: Empty page")
         
-        # Joindre les pages dans l'ordre
+        # Join the pages in the correct order
         full_text = "\n\n".join(extracted_pages)
         return full_text
 
 
 def load_pdfs_from_folder(folder_path: str, max_files: int = 5) -> List[str]:
     """
-    Charge les PDFs et extrait TOUT le contenu sans perte d'information.
-    Seul le bruit et les caractères spéciaux sont supprimés.
+    Load the PDFs and extract ALL the content without losing any information.
+    Only the noise and special characters are removed.
     """
     if not os.path.isdir(folder_path):
         raise FileNotFoundError(f"Data folder not found: {folder_path}")
@@ -87,21 +87,21 @@ def load_pdfs_from_folder(folder_path: str, max_files: int = 5) -> List[str]:
         print(f"📄 Processing: {filename}")
         
         try:
-            # Extraire le contenu complet
+            # Extract the complete content
             full_text = extract_pdf_content_ordered(file_path)
             
             if full_text:
                 texts.append(full_text)
-                print(f"✅ Total: {len(full_text)} caractères extraits (sans perte)")
-                # Compter les pages en utilisant une variable intermédiaire
+                print(f"✅ Total: {len(full_text)} characters extracted (without loss)")
+                # Count the pages using an intermediate variable
                 page_separator = "\n\n"
                 page_count = len(full_text.split(page_separator))
-                print(f"📊 Pages traitées: {page_count}")
+                print(f"📊 Pages processed: {page_count}")
             else:
-                print(f"⚠️  Aucun contenu extrait de {filename}")
+                print(f"⚠️  No content extracted from {filename}")
                 
         except Exception as e:
-            print(f"❌ Erreur lors du traitement de {filename}: {e}")
+            print(f"❌ Error during the processing of {filename}: {e}")
             continue
     
     return texts
@@ -109,10 +109,10 @@ def load_pdfs_from_folder(folder_path: str, max_files: int = 5) -> List[str]:
 
 def analyze_extracted_content(texts: List[str]) -> dict:
     """
-    Analyse le contenu extrait pour vérifier la qualité
+    Analyze the extracted content to check the quality
     """
     if not texts:
-        return {"error": "Aucun texte extrait"}
+        return {"error": "No text extracted"}
     
     analysis = {
         "total_documents": len(texts),

@@ -19,8 +19,8 @@ def _token_len_function() -> Callable[[str], int]:
 
 def split_texts_into_chunks(
     texts: List[str],
-    chunk_size_tokens: int = 512,  # Taille fixe plus petite
-    chunk_overlap_tokens: int = 128,  # Overlap significatif
+    chunk_size_tokens: int = 512,  # Fixed size smaller
+    chunk_overlap_tokens: int = 128,  # Significant overlap
 ) -> List[str]:
     """
     Split texts into chunks of fixed size with proper overlap.
@@ -33,7 +33,7 @@ def split_texts_into_chunks(
         chunk_overlap=chunk_overlap_tokens,
         length_function=token_len,
         is_separator_regex=False,
-        separators=["\n\n", "\n", ". ", " ", ""],  # Séparateurs optimisés
+        separators=["\n\n", "\n", ". ", " ", ""],  # Optimized separators
     )
 
     chunks: List[str] = []
@@ -48,10 +48,10 @@ def split_texts_into_chunks(
 
 def analyze_chunks(chunks: List[str]) -> dict:
     """
-    Analyse la qualité des chunks générés
+    Analyze the quality of the generated chunks
     """
     if not chunks:
-        return {"error": "Aucun chunk généré"}
+        return {"error": "No chunk generated"}
     
     token_len = _token_len_function()
     

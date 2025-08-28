@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
-Script de diagnostic des requêtes RAG
-Montre comment le système trouve le contexte pertinent pour chaque question
+RAG Query Debugging Script
+Shows how the system finds the relevant context for each question
 """
 
 from qdrant_client import QdrantClient
@@ -11,9 +11,9 @@ import json
 
 def debug_query(question: str, show_full_context: bool = False):
     """
-    Débogue une requête en montrant le processus de recherche et de récupération
+    Debug a query by showing the search and retrieval process
     """
-    print("🔍 DIAGNOSTIC DE REQUÊTE RAG")
+    print("🔍 RAG QUERY DEBUGGING")
     print("=" * 50)
     print(f"❓ Question: {question}")
     print()
@@ -21,138 +21,138 @@ def debug_query(question: str, show_full_context: bool = False):
     # 1. Connexion à Qdrant
     client = QdrantClient(host="localhost", port=6333)
     
-    # 2. Générer l'embedding de la question
-    print("🧠 ÉTAPE 1: Génération de l'embedding de la question")
+    # 2. Generate the question embedding
+    print("🧠 STEP 1: Generate the question embedding")
     print("-" * 40)
     
     try:
         question_embedding = embed_texts([question])[0]
-        print(f"✅ Embedding généré: {len(question_embedding)} dimensions")
-        print(f"📊 Premières valeurs: {question_embedding[:5]}...")
+        print(f"✅ Embedding generated: {len(question_embedding)} dimensions")
+        print(f"📊 First values: {question_embedding[:5]}...")
     except Exception as e:
-        print(f"❌ Erreur lors de la génération de l'embedding: {e}")
+        print(f"❌ Error generating the embedding: {e}")
         return
     
-    # 3. Rechercher les chunks les plus similaires
-    print(f"\n🔍 ÉTAPE 2: Recherche des chunks pertinents")
+    # 3. Search for the most similar chunks
+    print(f"\n🔍 STEP 2: Search for relevant chunks")
     print("-" * 40)
     
     try:
         search_results = client.search(
             collection_name="rag_collection",
             query_vector=question_embedding,
-            limit=5,  # Récupérer top-5 pour l'analyse
+            limit=5,  # Retrieve top-5 for analysis
             with_payload=True,
             with_vectors=False
         )
         
-        print(f"📊 Chunks trouvés: {len(search_results)}")
+        print(f"📊 Found chunks: {len(search_results)}")
         print()
         
-        # Analyser chaque résultat
+        # Analyze each result
         relevant_chunks = []
         for i, result in enumerate(search_results):
             score = result.score
-            chunk_text = result.payload.get('text', 'Pas de texte')
+            chunk_text = result.payload.get('text', 'No text')
             chunk_id = result.id
             
             print(f"🏆 CHUNK #{i+1} (ID: {chunk_id})")
-            print(f"   📈 Score de similarité: {score:.4f}")
-            print(f"   📏 Longueur: {len(chunk_text)} caractères")
+            print(f"   📈 Similarity score: {score:.4f}")
+            print(f"   📏 Length: {len(chunk_text)} characters")
             
-            # Analyser la pertinence du chunk
+            # Analyze the relevance of the chunk
             relevance_analysis = analyze_chunk_relevance(question, chunk_text)
-            print(f"   🎯 Pertinence: {relevance_analysis}")
+            print(f"   🎯 Relevance: {relevance_analysis}")
             
-            # Afficher un aperçu du chunk
+            # Show a preview of the chunk
             preview = chunk_text[:150] + "..." if len(chunk_text) > 150 else chunk_text
-            print(f"   📝 Aperçu: {preview}")
+            print(f"   📝 Preview: {preview}")
             
-            # Décider si le chunk est suffisamment pertinent
-            if score > 0.3:  # Seuil de pertinence
+            # Decide if the chunk is sufficiently relevant
+            if score > 0.3:  # Relevance threshold
                 relevant_chunks.append(chunk_text)
-                print(f"   ✅ CONSERVÉ (score > 0.3)")
+                print(f"   ✅ CONSERVED (score > 0.3)")
             else:
-                print(f"   ⚠️  SCORE TROP FAIBLE")
+                print(f"   ⚠️  SCORE TOO LOW")
             
             print()
         
-        # 4. Construire le contexte final
-        print("📋 ÉTAPE 3: Construction du contexte final")
+        # 4. Construct the final context
+        print("📋 STEP 3: Construct the final context")
         print("-" * 40)
         
         if relevant_chunks:
             context = "\n\n".join(relevant_chunks)
-            print(f"✅ Contexte construit: {len(relevant_chunks)} chunks pertinents")
-            print(f"📏 Longueur totale du contexte: {len(context)} caractères")
+            print(f"✅ Context constructed: {len(relevant_chunks)} relevant chunks")
+            print(f"📏 Total context length: {len(context)} characters")
             
             if show_full_context:
-                print(f"\n📄 CONTEXTE COMPLET:")
+                print(f"\n📄 FULL CONTEXT:")
                 print("─" * 50)
                 print(context)
                 print("─" * 50)
             
-            # 5. Générer la réponse
-            print(f"\n🤖 ÉTAPE 4: Génération de la réponse")
+            # 5. Generate the answer
+            print(f"\n🤖 STEP 4: Generate the answer")
             print("-" * 40)
             
             try:
                 answer = generate_response(relevant_chunks, question)
-                print(f"✅ Réponse générée:")
+                print(f"✅ Answer generated:")
                 print("─" * 50)
                 print(answer)
                 print("─" * 50)
                 
             except Exception as e:
-                print(f"❌ Erreur lors de la génération: {e}")
+                print(f"❌ Error generating the answer: {e}")
                 
         else:
-            print("❌ Aucun chunk suffisamment pertinent trouvé")
+            print("❌ No relevant chunk found")
             print("💡 Suggestions:")
-            print("   • Reformulez votre question")
-            print("   • Utilisez des mots-clés du document")
-            print("   • Vérifiez que le document contient l'information")
+            print("   • Reformulate your question")
+            print("   • Use keywords from the document")
+            print("   • Check that the document contains the information")
     
     except Exception as e:
-        print(f"❌ Erreur lors de la recherche: {e}")
+        print(f"❌ Error during the search: {e}")
 
 
 def analyze_chunk_relevance(question: str, chunk_text: str) -> str:
     """
-    Analyse la pertinence d'un chunk par rapport à une question
+    Analyze the relevance of a chunk with respect to a question
     """
     question_lower = question.lower()
     chunk_lower = chunk_text.lower()
     
-    # Compter les mots-clés communs
+    # Count the common keywords
     question_words = set(question_lower.split())
     chunk_words = set(chunk_lower.split())
     common_words = question_words.intersection(chunk_words)
     
-    # Filtrer les mots trop courts
+    # Filter out too short words
     common_words = {w for w in common_words if len(w) > 3}
     
     if len(common_words) >= 3:
-        return f"TRÈS PERTINENT ({len(common_words)} mots-clés: {', '.join(list(common_words)[:3])})"
+        return f"VERY RELEVANT ({len(common_words)} keywords: {', '.join(list(common_words)[:3])})"
     elif len(common_words) >= 1:
-        return f"PERTINENT ({len(common_words)} mots-clés: {', '.join(common_words)})"
+        return f"RELEVANT ({len(common_words)} keywords: {', '.join(common_words)})"
     else:
-        return "PEU PERTINENT (aucun mot-clé commun)"
+        return "NOT RELEVANT (no common keywords)"
 
 
 def interactive_debug():
     """
-    Mode interactif pour tester plusieurs questions
+    Interactive mode to test multiple questions
     """
-    print("🔍 MODE DIAGNOSTIC INTERACTIF")
+    print("🔍 INTERACTIVE DEBUG MODE")
     print("=" * 40)
-    print("Tapez vos questions pour analyser le processus RAG")
-    print("Commandes: 'quit' pour quitter, 'context' pour voir le contexte complet")
+    print("Type your questions to analyze the RAG process")
+    print("Commands: 'quit' to exit, 'context' to see the full context")
     print()
     
     while True:
         try:
-            question = input("❓ Votre question: ").strip()
+            question = input("❓ Your question: ").strip()
             
             if not question:
                 continue
@@ -161,11 +161,11 @@ def interactive_debug():
                 break
                 
             if question.lower() == 'context':
-                # Mode avec contexte complet
+                # Full context mode
                 debug_query("humanitarian data", show_full_context=True)
                 continue
             
-            # Mode normal
+            # Normal mode
             debug_query(question, show_full_context=False)
             
             print("\n" + "="*60 + "\n")
@@ -173,16 +173,16 @@ def interactive_debug():
         except KeyboardInterrupt:
             break
         except Exception as e:
-            print(f"❌ Erreur: {e}")
+            print(f"❌ Error: {e}")
 
 
 if __name__ == "__main__":
     import sys
     
     if len(sys.argv) > 1:
-        # Mode ligne de commande
+        # Command line mode
         question = " ".join(sys.argv[1:])
         debug_query(question, show_full_context=True)
     else:
-        # Mode interactif
+        # Interactive mode
         interactive_debug()

@@ -46,14 +46,14 @@ def ensure_collection(client: QdrantClient, vector_size: int) -> None:
 
 def get_existing_documents(client: QdrantClient) -> Dict[str, List[int]]:
     """
-    Récupère la liste des documents déjà indexés avec leurs IDs de chunks.
-    Retourne: {filename_hash: [chunk_ids]}
+    Retrieve the list of already indexed documents with their chunk IDs.
+    Return: {filename_hash: [chunk_ids]}
     """
     try:
-        # Récupérer tous les points avec leurs payloads
+        # Retrieve all points with their payloads
         all_points = client.scroll(
             collection_name=_COLLECTION_NAME,
-            limit=10000,  # Limite élevée pour récupérer tous les points
+            limit=10000,  # High limit to retrieve all points
             with_payload=True
         )[0]
         
@@ -77,8 +77,8 @@ def upsert_embeddings(
     document_hashes: Sequence[str] = None
 ) -> None:
     """
-    Insère les embeddings avec métadonnées des documents.
-    Si document_hashes est fourni, ajoute le hash du document à chaque chunk.
+    Insert the embeddings with document metadata.
+    If document_hashes is provided, add the document hash to each chunk.
     """
     points = []
     for i, (emb, chunk) in enumerate(zip(embeddings, chunks)):
@@ -99,11 +99,11 @@ def upsert_embeddings_incremental(
     start_id: int = None
 ) -> int:
     """
-    Ajoute de nouveaux embeddings avec des IDs incrémentaux.
-    Retourne le prochain ID disponible.
+    Add new embeddings with incremental IDs.
+    Return the next available ID.
     """
     if start_id is None:
-        # Trouver le plus grand ID existant
+        # Find the largest existing ID
         try:
             all_points = client.scroll(
                 collection_name=_COLLECTION_NAME,
@@ -137,7 +137,7 @@ def search_top_k(client: QdrantClient, query_vector: Sequence[float], k: int = 3
 
 def get_document_hash(file_path: str) -> str:
     """
-    Génère un hash unique pour un fichier PDF basé sur son nom et sa taille.
+    Generate a unique hash for a PDF file based on its name and size.
     """
     file_stat = os.stat(file_path)
     file_info = f"{os.path.basename(file_path)}_{file_stat.st_size}_{file_stat.st_mtime}"
