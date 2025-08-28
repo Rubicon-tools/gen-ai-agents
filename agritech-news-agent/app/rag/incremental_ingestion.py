@@ -20,17 +20,15 @@ import json
 from typing import List, Dict, Any
 
 # Import des modules
-from modules.ingestion import load_pdfs_from_folder, analyze_extracted_content
-from modules.chunking import split_texts_into_chunks, analyze_chunks
+from modules.ingestion import load_pdfs_from_folder
+from modules.chunking import split_texts_into_chunks
 from modules.embeddings import embed_texts
 from modules.vectorstore import (
-    get_qdrant_client, 
-    ensure_collection, 
+    get_qdrant_client,
     get_existing_documents,
     upsert_embeddings_incremental,
     get_document_hash
 )
-
 
 class IncrementalIngestionPipeline:
     def __init__(self, data_dir: str = "data"):
@@ -189,7 +187,6 @@ class IncrementalIngestionPipeline:
         
         return results
 
-
 def main():
     """Point d'entrée principal."""
     if len(sys.argv) > 1:
@@ -204,9 +201,5 @@ def main():
     pipeline = IncrementalIngestionPipeline(data_dir)
     pipeline.run()
 
-
 if __name__ == "__main__":
     main()
-
-
-
