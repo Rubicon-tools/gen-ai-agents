@@ -6,12 +6,11 @@ services:
       - .env
     volumes:
       - .:/app
-    networks:
-      - n8n-builder-dev-network
     command: tail -f /dev/null
     restart: unless-stopped
+    networks:
+      - gen-ai-network
 
 networks:
-  n8n-builder-dev-network:
+  gen-ai-network:
     external: true
-    name: n8n-builder-ngrok_n8n-builder-dev-network

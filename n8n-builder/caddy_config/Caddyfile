@@ -1,4 +1,0 @@
-genai.rubicon.ma {
-  reverse_proxy n8n:5678
-  tls bbougrine@rubicon.ma
-}
