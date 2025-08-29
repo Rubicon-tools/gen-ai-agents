@@ -20,7 +20,7 @@ print_banner() {
 }
 
 print_usage() {
-  echo -e "${YELLOW}Usage:${NC} ./docker.sh {${GREEN}up${NC}|${RED}down${NC}|${CYAN}logs${NC}|restart|status}"
+  echo -e "${YELLOW}Usage:${NC} ./docker.sh {${GREEN}build${NC}|${RED}down${NC}|${CYAN}logs${NC}|restart|status}"
 }
 
 load_env_var() {
@@ -31,6 +31,12 @@ generate_env_with_url() {
   local url=$1
   local token=$(load_env_var "NGROK_TOKEN")
   local tz=$(load_env_var "TIMEZONE")
+  local n8n_default_binary_data_mode=$(load_env_var "N8N_DEFAULT_BINARY_DATA_MODE")
+  local n8n_community_packages_allow_tool_usage=$(load_env_var "N8N_COMMUNITY_PACKAGES_ALLOW_TOOL_USAGE")
+  local n8n_runners_enabled=$(load_env_var "N8N_RUNNERS_ENABLED")
+  local n8n_enforce_settings_file_permissions=$(load_env_var "N8N_ENFORCE_SETTINGS_FILE_PERMISSIONS")
+  local postgres_host=$(load_env_var "POSTGRES_HOST")
+  local postgres_port=$(load_env_var "POSTGRES_PORT")
   local postgres_user=$(load_env_var "POSTGRES_USER")
   local postgres_pass=$(load_env_var "POSTGRES_PASSWORD")
   local postgres_db=$(load_env_var "POSTGRES_DB")
@@ -43,17 +49,21 @@ TIMEZONE=$tz
 
 # ngrok
 NGROK_TOKEN=$token
+
+# ngrok (auto-generated)
 URL=$url
 WEBHOOK_URL=$url
 EDITOR_BASE_URL=$url
 
 # n8n
-N8N_DEFAULT_BINARY_DATA_MODE=filesystem
-N8N_COMMUNITY_PACKAGES_ALLOW_TOOL_USAGE=true
-N8N_RUNNERS_ENABLED=true
-N8N_ENFORCE_SETTINGS_FILE_PERMISSIONS=true
+N8N_DEFAULT_BINARY_DATA_MODE=$n8n_default_binary_data_mode
+N8N_COMMUNITY_PACKAGES_ALLOW_TOOL_USAGE=$n8n_community_packages_allow_tool_usage
+N8N_RUNNERS_ENABLED=$n8n_runners_enabled
+N8N_ENFORCE_SETTINGS_FILE_PERMISSIONS=$n8n_enforce_settings_file_permissions
 
 # PostgreSQL
+POSTGRES_HOST=$postgres_host
+POSTGRES_PORT=$postgres_port
 POSTGRES_USER=$postgres_user
 POSTGRES_PASSWORD=$postgres_pass
 POSTGRES_DB=$postgres_db
@@ -86,8 +96,8 @@ pull_ollama_models() {
 print_banner
 
 case "$1" in
-  up)
-    echo -e "${GREEN}▶ Starting all containers...${NC}"
+  build)
+    echo -e "${GREEN}▶ Building and starting all containers...${NC}"
     docker compose up -d
 
     # pull_ollama_models

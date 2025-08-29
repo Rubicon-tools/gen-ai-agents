@@ -14,3 +14,9 @@ services:
     volumes:
       - .:/app
       - /app/node_modules
+    networks:
+      - gen-ai-network
+
+networks:
+  gen-ai-network:
+    external: true

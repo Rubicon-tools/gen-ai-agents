@@ -8,3 +8,9 @@ services:
       - ./reports:/app/reports
     command: tail -f /dev/null
     restart: always
+    networks:
+      - gen-ai-network
+
+networks:
+  gen-ai-network:
+    external: true
