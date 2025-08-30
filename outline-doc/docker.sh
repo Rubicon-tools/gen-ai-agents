@@ -5,6 +5,8 @@ set -e
 case "$1" in
   build)
     docker compose build
+
+    docker compose up -d
     ;;
   up)
     docker compose up -d
