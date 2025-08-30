@@ -1,7 +1,3 @@
-# SSL certificates
-*.pem
-*-key.pem
-
 # Caddy specific
 .caddy/
 Caddyfile.local
