@@ -25,10 +25,23 @@ services:
     networks:
       - gen-ai-network
 
+  postgres:
+    container_name: n8n-builder-postgres
+    image: postgres:14
+    restart: unless-stopped
+    env_file:
+      - .env
+    volumes:
+      - n8n-builder-postgres-data:/var/lib/postgresql/data
+    networks:
+      - gen-ai-network
+
 volumes:
   n8n-builder-n8n-data:
     name: n8n-builder-n8n-data
+  n8n-builder-postgres-data:
+    name: n8n-builder-postgres-data
 
-networks:
+networks: 
   gen-ai-network:
     external: true
