@@ -1,24 +1,13 @@
-dev.genai.rubicon.ma {
-    tls /etc/caddy/dev.genai.rubicon.ma.pem /etc/caddy/dev.genai.rubicon.ma-key.pem
-
-    # n8n at /n8n
-    handle_path /n8n* {
-        reverse_proxy n8n-builder-dev-n8n:5678 {
-            header_down Strict-Transport-Security "max-age=31536000"
-        }
+dev.genai-docs.rubicon.ma {
+    tls /etc/caddy/dev.genai-docs.rubicon.ma.pem /etc/caddy/dev.genai-docs.rubicon.ma-key.pem
+    reverse_proxy outline-app:3000 {
+        header_down Strict-Transport-Security "max-age=31536000"
     }
+}
 
-    # Outline Wiki at /docs
-    handle_path /docs* {
-        reverse_proxy n8n-builder-dev-n8n:5678 {
-            header_down Strict-Transport-Security "max-age=31536000"
-        }
-    }
-
-    # All other routes to frontend client
-    route {
-        reverse_proxy n8n-builder-dev-n8n:5678 {
-            header_down Strict-Transport-Security "max-age=31536000"
-        }
+dev.genai-n8n.rubicon.ma {
+    tls /etc/caddy/dev.genai-n8n.rubicon.ma.pem /etc/caddy/dev.genai-n8n.rubicon.ma-key.pem
+    reverse_proxy n8n-builder-dev-n8n:5678 {
+        header_down Strict-Transport-Security "max-age=31536000"
     }
 }

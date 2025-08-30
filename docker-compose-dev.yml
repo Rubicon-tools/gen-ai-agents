@@ -21,49 +21,12 @@ services:
     volumes:
       - ./caddy/CaddyDevfile:/etc/caddy/Caddyfile
       - ./caddy/site:/srv
-      - ./caddy/dev.genai.rubicon.ma.pem:/etc/caddy/dev.genai.rubicon.ma.pem
-      - ./caddy/dev.genai.rubicon.ma-key.pem:/etc/caddy/dev.genai.rubicon.ma-key.pem
+      - ./caddy/keys/dev.genai-docs.rubicon.ma.pem:/etc/caddy/dev.genai-docs.rubicon.ma.pem
+      - ./caddy/keys/dev.genai-docs.rubicon.ma-key.pem:/etc/caddy/dev.genai-docs.rubicon.ma-key.pem
+      - ./caddy/keys/dev.genai-n8n.rubicon.ma.pem:/etc/caddy/dev.genai-n8n.rubicon.ma.pem
+      - ./caddy/keys/dev.genai-n8n.rubicon.ma-key.pem:/etc/caddy/dev.genai-n8n.rubicon.ma-key.pem
       - gen-ai-caddy-data:/data
       - gen-ai-caddy-config:/config
-    networks:
-      - gen-ai-network
-
-  postgres:
-    container_name: gen-ai-postgres
-    image: postgres:14
-    restart: unless-stopped
-    env_file:
-      - .env
-    ports:
-      - "5432:5432"
-    volumes:
-      - gen-ai-postgres-data:/var/lib/postgresql/data
-    networks:
-      - gen-ai-network
-
-  redis:
-    container_name: gen-ai-redis
-    image: redis:6
-    restart: unless-stopped
-    env_file:
-      - .env
-    ports:
-      - "6379:6379"
-    volumes:
-      - gen-ai-redis-data:/data
-    networks:
-      - gen-ai-network
-
-  qdrant:
-    container_name: gen-ai-qdrant
-    image: qdrant/qdrant:latest
-    restart: unless-stopped
-    env_file:
-      - .env
-    ports:
-      - "6333:6333"
-    volumes:
-      - gen-ai-qdrant-data:/qdrant/storage
     networks:
       - gen-ai-network
 
@@ -73,15 +36,6 @@ volumes:
     driver: local
   gen-ai-caddy-config:
     name: gen-ai-caddy-config
-    driver: local
-  gen-ai-postgres-data:
-    name: gen-ai-postgres-data
-    driver: local
-  gen-ai-redis-data:
-    name: gen-ai-redis-data
-    driver: local
-  gen-ai-qdrant-data:
-    name: gen-ai-qdrant-data
     driver: local
 
 networks:

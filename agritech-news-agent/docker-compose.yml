@@ -1,6 +1,6 @@
 services:
-  agritech-news-agent:
-    container_name: agritech-news-agent
+  agritech-news-agent-app:
+    container_name: agritech-news-agent-app
     build: .
     env_file:
       - .env
@@ -10,6 +10,40 @@ services:
     restart: unless-stopped
     networks:
       - gen-ai-network
+
+  postgres:
+    container_name: agritech-news-agent-postgres
+    image: postgres:14
+    restart: unless-stopped
+    env_file:
+      - .env
+    ports:
+      - "5432:5432"
+    volumes:
+      - agritech-news-agent-postgres-data:/var/lib/postgresql/data
+    networks:
+      - gen-ai-network
+  
+  qdrant:
+    container_name: agritech-news-agent-qdrant
+    image: qdrant/qdrant:latest
+    restart: unless-stopped
+    env_file:
+      - .env
+    ports:
+      - "6333:6333"
+    volumes:
+      - agritech-news-agent-qdrant-data:/qdrant/storage
+    networks:
+      - gen-ai-network
+
+volumes:
+  agritech-news-agent-postgres-data:
+    name: agritech-news-agent-postgres-data
+    driver: local
+  agritech-news-agent-qdrant-data:
+    name: agritech-news-agent-qdrant-data
+    driver: local
 
 networks:
   gen-ai-network:

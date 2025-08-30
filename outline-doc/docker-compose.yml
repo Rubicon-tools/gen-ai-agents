@@ -1,0 +1,53 @@
+services:
+  outline:
+    container_name: outline-app
+    image: outlinewiki/outline:latest
+    ports:
+      - "9002:3000"
+    env_file:
+      - .env
+    networks:
+      - gen-ai-network
+    volumes:
+      - outline-uploads:/var/lib/outline/uploads
+
+  postgres:
+    container_name: outline-postgres
+    image: postgres:14
+    restart: unless-stopped
+    env_file:
+      - .env
+    ports:
+      - "5432:5432"
+    volumes:
+      - outline-postgres-data:/var/lib/postgresql/data
+    networks:
+      - gen-ai-network
+
+  redis:
+    container_name: outline-redis
+    image: redis:6
+    restart: unless-stopped
+    env_file:
+      - .env
+    ports:
+      - "6379:6379"
+    volumes:
+      - outline-redis-data:/data
+    networks:
+      - gen-ai-network
+
+volumes:
+  outline-uploads:
+    name: outline-uploads
+    driver: local
+  outline-postgres-data:
+    name: outline-postgres-data
+    driver: local
+  outline-redis-data:
+    name: outline-redis-data
+    driver: local
+
+networks:
+  gen-ai-network:
+    external: true
