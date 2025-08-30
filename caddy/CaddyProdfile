@@ -9,7 +9,7 @@ genai.rubicon.ma {
 
     # Outline Wiki at /docs
     handle_path /docs* {
-        reverse_proxy n8n-builder-n8n:5678 {
+        reverse_proxy outline-app:9002 {
             header_down Strict-Transport-Security "max-age=31536000"
         }
     }
