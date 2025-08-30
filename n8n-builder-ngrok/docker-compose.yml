@@ -1,6 +1,6 @@
 services:
   n8n:
-    container_name: n8n-builder-dev-n8n
+    container_name: n8n-builder-n8n
     image: docker.n8n.io/n8nio/n8n
     restart: unless-stopped
     ports:
@@ -25,10 +25,10 @@ services:
     networks:
       - gen-ai-network
     volumes:
-      - n8n-builder-dev-n8n-data:/home/node/.n8n
+      - n8n-builder-n8n-data:/home/node/.n8n
 
   ngrok:
-    container_name: n8n-builder-dev-ngrok
+    container_name: n8n-builder-ngrok
     image: ngrok/ngrok:latest
     ports:
       - "4040:4040"
@@ -44,9 +44,24 @@ services:
     networks:
       - gen-ai-network
 
+  postgres:
+    container_name: n8n-builder-postgres
+    image: postgres:14
+    restart: unless-stopped
+    env_file:
+      - .env
+    ports:
+      - "5432:5432"
+    volumes:
+      - n8n-builder-postgres-data:/var/lib/postgresql/data
+    networks:
+      - gen-ai-network
+
 volumes:
-  n8n-builder-dev-n8n-data:
-    name: n8n-builder-dev-n8n-data
+  n8n-builder-n8n-data:
+    name: n8n-builder-n8n-data
+  n8n-builder-postgres-data:
+    name: n8n-builder-postgres-data
 
 networks:
   gen-ai-network:
