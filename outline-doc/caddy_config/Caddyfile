@@ -1,7 +1,0 @@
-genai.rubicon.ma {
-  handle_path /docs* {
-    reverse_proxy outline-app:3000
-    header_up X-Forwarded-Prefix /docs
-  }
-  encode gzip
-}
