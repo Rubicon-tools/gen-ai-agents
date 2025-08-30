@@ -1,44 +1,23 @@
+genai-docs.rubicon.ma {
+    reverse_proxy outline-app:3000
+    header {
+        Strict-Transport-Security max-age=31536000;
+        X-Content-Type-Options nosniff
+        X-Frame-Options DENY
+        Referrer-Policy no-referrer-when-downgrade
+    }
+}
+
+genai-n8n.rubicon.ma {
+    reverse_proxy n8n-builder-n8n:5678
+    header {
+        Strict-Transport-Security max-age=31536000;
+        X-Content-Type-Options nosniff
+        X-Frame-Options DENY
+        Referrer-Policy no-referrer-when-downgrade
+    }
+}
+
 genai.rubicon.ma {
-
-    # n8n at /n8n
-    handle_path /n8n* {
-        reverse_proxy n8n-builder-n8n:5678 {
-            header_down Strict-Transport-Security "max-age=31536000"
-        }
-    }
-
-    # Outline Wiki at /docs
-    handle_path /docs* {
-        reverse_proxy outline-app:9002 {
-            header_down Strict-Transport-Security "max-age=31536000"
-        }
-    }
-
-    # General authentication for everything except /n8n*, /docs*, and /static/js*
-    @auth_paths {
-        path /*
-        not path /n8n*
-        not path /docs*
-        not path /static/js*
-    }
-
-    route @auth_paths {
-        basicauth * {
-            ops JDJhJDE0JFkyR1F4bTRGNS9yZi5zMWRZL2NxLk8vcEFzeXNKYk1lVGRKMmR6QTRybmNja242QjdPaDhl
-        }
-    }
-
-    # Static files (SPA support with fallback to /index.html)
-    route {
-        header {
-            Strict-Transport-Security max-age=31536000;
-            X-Content-Type-Options nosniff
-            X-Frame-Options DENY
-            Referrer-Policy no-referrer-when-downgrade
-        }
-        encode gzip
-        root * /srv
-        try_files {path} /index.html
-        file_server
-    }
+    redir https://genai-docs.rubicon.ma{uri}
 }
