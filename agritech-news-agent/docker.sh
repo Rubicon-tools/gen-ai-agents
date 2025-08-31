@@ -1,18 +1,49 @@
 #!/bin/bash
 
+set -e
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+# Load .env if present
+if [ -f "$SCRIPT_DIR/.env" ]; then
+  set -o allexport
+  source "$SCRIPT_DIR/.env"
+  set +o allexport
+fi
+
+# Compose file logic
+COMPOSE_FILE="docker-compose-prod.yml"
+if [ -n "$NODE_ENV" ] && [ -f "$SCRIPT_DIR/docker-compose-${NODE_ENV}.yml" ]; then
+  COMPOSE_FILE="docker-compose-${NODE_ENV}.yml"
+fi
+
 CONTAINER_NAME="agritech-news-agent"
 
 case "$1" in
   build)
-    echo "🚀 Building Docker image..."
-    docker compose build --no-cache $CONTAINER_NAME
+    echo "Building Docker image using $COMPOSE_FILE..."
+    docker compose -f $COMPOSE_FILE build
 
     echo "⬆️ Starting container after build..."
-    docker compose up -d $CONTAINER_NAME
-
-    echo "📦 Container is running in the background. You can now trigger scraping."
+    docker compose -f $COMPOSE_FILE up -d
     ;;
-
+  up)
+    echo "Starting containers using $COMPOSE_FILE..."
+    docker compose -f $COMPOSE_FILE up -d
+    ;;
+  down)
+    echo "Stopping containers using $COMPOSE_FILE..."
+    docker compose -f $COMPOSE_FILE down
+    ;;
+  restart)
+    echo "Restarting containers using $COMPOSE_FILE..."
+    docker compose -f $COMPOSE_FILE restart
+    ;;
+  logs)
+    shift
+    echo "Showing logs using $COMPOSE_FILE..."
+    docker compose -f $COMPOSE_FILE logs "$@"
+    ;;
   scrape)
     echo "📄 Running scraper inside the container..."
 
@@ -89,22 +120,13 @@ case "$1" in
     echo "🛑 Attempting to stop background scraper process..."
     docker exec -it $CONTAINER_NAME pkill -f main.py && echo "✅ Scraper stopped." || echo "⚠️ No running scraper found."
     ;;
-
-  up)
-    echo "⬆️ Starting container..."
-    docker compose up -d $CONTAINER_NAME
-    ;;
-
-  stop)
-    echo "🛑 Stopping container..."
-    docker compose down
-    ;;
-
   *)
     echo "Usage:"
     echo "  bash $0 build"
     echo "  bash $0 up"
-    echo "  bash $0 stop"
+    echo "  bash $0 down"
+    echo "  bash $0 restart"
+    echo "  bash $0 logs [service]"
     echo "  bash $0 scrape [limit] [-continue] [-bg]"
     echo "  bash $0 scrape-newest [-bg]"
     echo "  bash $0 stop-scraper"

@@ -4,8 +4,10 @@ set -e
 COMPOSE_FILE=docker-compose.yml
 
 case "$1" in
-  up)
-    echo "🚀 Starting containers..."
+  build)
+    echo "🚀 Building and starting containers..."
+    docker compose -f $COMPOSE_FILE build
+    echo "⬆️ Starting container after build..."
     docker compose -f $COMPOSE_FILE up -d
     ;;
   down)
@@ -22,7 +24,7 @@ case "$1" in
     docker compose -f $COMPOSE_FILE logs -f
     ;;
   *)
-    echo "Usage: $0 {up|down|restart|logs}"
+    echo "Usage: $0 {build|down|restart|logs}"
     exit 1
     ;;
 esac

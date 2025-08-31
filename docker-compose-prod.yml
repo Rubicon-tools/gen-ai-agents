@@ -26,54 +26,12 @@ services:
     networks:
       - gen-ai-network
 
-  postgres:
-    container_name: gen-ai-postgres
-    image: postgres:14
-    restart: unless-stopped
-    env_file:
-      - .env
-    volumes:
-      - gen-ai-postgres-data:/var/lib/postgresql/data
-    networks:
-      - gen-ai-network
-
-  redis:
-    container_name: gen-ai-redis
-    image: redis:6
-    restart: unless-stopped
-    env_file:
-      - .env
-    volumes:
-      - gen-ai-redis-data:/data
-    networks:
-      - gen-ai-network
-
-  qdrant:
-    container_name: gen-ai-qdrant
-    image: qdrant/qdrant:latest
-    restart: unless-stopped
-    env_file:
-      - .env
-    volumes:
-      - gen-ai-qdrant-data:/qdrant/storage
-    networks:
-      - gen-ai-network
-
 volumes:
   gen-ai-caddy-data:
     name: gen-ai-caddy-data
     driver: local
   gen-ai-caddy-config:
     name: gen-ai-caddy-config
-    driver: local
-  gen-ai-postgres-data:
-    name: gen-ai-postgres-data
-    driver: local
-  gen-ai-redis-data:
-    name: gen-ai-redis-data
-    driver: local
-  gen-ai-qdrant-data:
-    name: gen-ai-qdrant-data
     driver: local
 
 networks:

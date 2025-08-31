@@ -9,7 +9,7 @@ echo "🌍 Environment: NODE_ENV=${NODE_ENV:-production}"
 APP_NAME="internal-dashboard"
 
 case "$1" in
-  up)
+  build)
     echo "🚀 Building and starting $APP_NAME..."
     docker-compose up --build -d
     ;;
@@ -36,6 +36,6 @@ case "$1" in
     ;;
 
   help|*)
-    echo "Usage: ./docker.sh {up|down|restart|logs|clean}"
+    echo "Usage: ./docker.sh {build|down|restart|logs|clean}"
     ;;
 esac
