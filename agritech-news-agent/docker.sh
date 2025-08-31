@@ -13,8 +13,8 @@ fi
 
 # Compose file logic
 COMPOSE_FILE="docker-compose-prod.yml"
-if [ -n "$NODE_ENV" ] && [ -f "$SCRIPT_DIR/docker-compose-${NODE_ENV}.yml" ]; then
-  COMPOSE_FILE="docker-compose-${NODE_ENV}.yml"
+if [ -n "$ENV" ] && [ -f "$SCRIPT_DIR/docker-compose-${ENV}.yml" ]; then
+  COMPOSE_FILE="docker-compose-${ENV}.yml"
 fi
 
 CONTAINER_NAME="agritech-news-agent"
