@@ -2,8 +2,6 @@ services:
   outline:
     container_name: outline-app
     image: outlinewiki/outline:latest
-    ports:
-      - "9002:3000"
     env_file:
       - .env
     networks:

@@ -31,8 +31,6 @@ services:
     container_name: gen-ai-open-webui
     volumes:
       - gen-ai-open-webui:/app/backend/data
-    ports:
-      - 3003:8080
     env_file:
       - .env
     restart: unless-stopped
