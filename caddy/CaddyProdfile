@@ -1,5 +1,5 @@
 genai-chatwebui.rubicon.ma {
-    reverse_proxy gen-ai-open-webui:3003
+    reverse_proxy gen-ai-open-webui:8080
     header {
         Strict-Transport-Security max-age=31536000;
         X-Content-Type-Options nosniff
