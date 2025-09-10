@@ -26,12 +26,28 @@ services:
     networks:
       - gen-ai-network
 
+  open-webui:
+    image: ghcr.io/open-webui/open-webui:main
+    container_name: gen-ai-open-webui
+    volumes:
+      - gen-ai-open-webui:/app/backend/data
+    ports:
+      - 3003:8080
+    env_file:
+      - .env
+    restart: unless-stopped
+    networks:
+      - gen-ai-network
+
 volumes:
   gen-ai-caddy-data:
     name: gen-ai-caddy-data
     driver: local
   gen-ai-caddy-config:
     name: gen-ai-caddy-config
+    driver: local
+  gen-ai-open-webui:
+    name: gen-ai-open-webui
     driver: local
 
 networks:
