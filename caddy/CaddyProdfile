@@ -18,6 +18,16 @@ genai-n8n.rubicon.ma {
     }
 }
 
+genai-chat-webui.rubicon.ma {
+    reverse_proxy gen-ai-open-webui:8080
+    header {
+        Strict-Transport-Security max-age=31536000;
+        X-Content-Type-Options nosniff
+        X-Frame-Options DENY
+        Referrer-Policy no-referrer-when-downgrade
+    }
+}
+
 genai.rubicon.ma {
     redir https://genai-docs.rubicon.ma{uri}
 }
