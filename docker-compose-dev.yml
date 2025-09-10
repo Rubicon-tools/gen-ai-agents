@@ -25,8 +25,8 @@ services:
       - ./caddy/keys/dev.genai-docs.rubicon.ma-key.pem:/etc/caddy/dev.genai-docs.rubicon.ma-key.pem
       - ./caddy/keys/dev.genai-n8n.rubicon.ma.pem:/etc/caddy/dev.genai-n8n.rubicon.ma.pem
       - ./caddy/keys/dev.genai-n8n.rubicon.ma-key.pem:/etc/caddy/dev.genai-n8n.rubicon.ma-key.pem
-      - ./caddy/keys/dev.genai-chat-webui.rubicon.ma.pem:/etc/caddy/dev.genai-chat-webui.rubicon.ma.pem
-      - ./caddy/keys/dev.genai-chat-webui.rubicon.ma-key.pem:/etc/caddy/dev.genai-chat-webui.rubicon.ma-key.pem
+      - ./caddy/keys/dev.genai-chatwebui.rubicon.ma.pem:/etc/caddy/dev.genai-chatwebui.rubicon.ma.pem
+      - ./caddy/keys/dev.genai-chatwebui.rubicon.ma-key.pem:/etc/caddy/dev.genai-chatwebui.rubicon.ma-key.pem
       - gen-ai-caddy-data:/data
       - gen-ai-caddy-config:/config
     networks:
