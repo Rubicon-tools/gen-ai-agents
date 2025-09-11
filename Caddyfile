@@ -1,0 +1,13 @@
+:3000 {
+    @api path /scrape* /docs* /redoc* /healthz*
+    handle @api {
+        reverse_proxy 127.0.0.1:8000
+    }
+
+    @ui path /ui*
+    handle @ui {
+        reverse_proxy 127.0.0.1:8000
+    }
+
+    respond / "Caddy is running" 200
+}
