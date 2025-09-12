@@ -1,15 +1,15 @@
 dev.genai-docs.rubicon.ma {
-    tls /etc/caddy/dev.genai-docs.rubicon.ma.pem /etc/caddy/dev.genai-docs.rubicon.ma-key.pem
-    reverse_proxy outline-app:3000 {
-        header_down Strict-Transport-Security "max-age=31536000"
-    }
+	tls /etc/caddy/dev.genai-docs.rubicon.ma.pem /etc/caddy/dev.genai-docs.rubicon.ma-key.pem
+	reverse_proxy outline-app:3000 {
+		header_down Strict-Transport-Security "max-age=31536000"
+	}
 }
 
 dev.genai-n8n.rubicon.ma {
-    tls /etc/caddy/dev.genai-n8n.rubicon.ma.pem /etc/caddy/dev.genai-n8n.rubicon.ma-key.pem
-    reverse_proxy n8n-builder-dev-n8n:5678 {
-        header_down Strict-Transport-Security "max-age=31536000"
-    }
+	tls /etc/caddy/dev.genai-n8n.rubicon.ma.pem /etc/caddy/dev.genai-n8n.rubicon.ma-key.pem
+	reverse_proxy n8n-builder-dev-n8n:5678 {
+		header_down Strict-Transport-Security "max-age=31536000"
+	}
 }
 
 dev.genai-chatwebui.rubicon.ma {
