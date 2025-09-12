@@ -127,7 +127,110 @@ case "$1" in
       docker exec -it $CONTAINER_NAME $CMD
     fi
     ;;
+  api-scraper)
+    echo "📡 Running API scraper (oldest-first backfill)..."
 
+    BACKGROUND="false"
+    QUERY="agriculture"
+    PAGE_SIZE=200
+    SLEEP=3.0
+    MAX_PAGES=""
+
+    # Parse args: -bg, -q/--query, --page-size, --sleep, --max-pages
+    shift
+    while [[ $# -gt 0 ]]; do
+      case "$1" in
+        -bg)
+          BACKGROUND="true"
+          ;;
+        -q|--query)
+          QUERY="$2"; shift
+          ;;
+        --page-size)
+          PAGE_SIZE="$2"; shift
+          ;;
+        --sleep)
+          SLEEP="$2"; shift
+          ;;
+        --max-pages)
+          MAX_PAGES="$2"; shift
+          ;;
+        *)
+          echo "❌ Invalid argument: '$1'"
+          echo "Usage: bash $0 api-scraper [-bg] [-q|--query \"agriculture\"] [--page-size 200] [--sleep 3.0] [--max-pages N]"
+          exit 1
+          ;;
+      esac
+      shift
+    done
+
+    CMD="python main.py --mode oldest --query \"$QUERY\" --page-size $PAGE_SIZE --sleep $SLEEP"
+    if [ -n "$MAX_PAGES" ]; then
+      CMD="$CMD --max-pages $MAX_PAGES"
+    fi
+
+    if [ "$BACKGROUND" = "true" ]; then
+      echo "🧵 Running in background with nohup..."
+      mkdir -p logs
+      nohup docker exec $CONTAINER_NAME bash -lc "$CMD" > logs/api-scraper.out 2>&1 &
+      echo "📌 Background PID: $!"
+      echo "📝 Logs: logs/api-scraper.out"
+    else
+      docker exec -it $CONTAINER_NAME bash -lc "$CMD"
+    fi
+    ;;
+  api-scraper-newest)
+    echo "📰 Running API scraper (newest-first daily mode)..."
+
+    BACKGROUND="false"
+    QUERY="agriculture"
+    PAGE_SIZE=200
+    SLEEP=3.0
+    MAX_PAGES=""
+
+    # Parse args: -bg, -q/--query, --page-size, --sleep, --max-pages
+    shift
+    while [[ $# -gt 0 ]]; do
+      case "$1" in
+        -bg)
+          BACKGROUND="true"
+          ;;
+        -q|--query)
+          QUERY="$2"; shift
+          ;;
+        --page-size)
+          PAGE_SIZE="$2"; shift
+          ;;
+        --sleep)
+          SLEEP="$2"; shift
+          ;;
+        --max-pages)
+          MAX_PAGES="$2"; shift
+          ;;
+        *)
+          echo "❌ Invalid argument: '$1'"
+          echo "Usage: bash $0 api-scraper-newest [-bg] [-q|--query \"agriculture\"] [--page-size 200] [--sleep 3.0] [--max-pages N]"
+          exit 1
+          ;;
+      esac
+      shift
+    done
+
+    CMD="python main.py --mode newest --query \"$QUERY\" --page-size $PAGE_SIZE --sleep $SLEEP"
+    if [ -n "$MAX_PAGES" ]; then
+      CMD="$CMD --max-pages $MAX_PAGES"
+    fi
+
+    if [ "$BACKGROUND" = "true" ]; then
+      echo "🧵 Running in background with nohup..."
+      mkdir -p logs
+      nohup docker exec $CONTAINER_NAME bash -lc "$CMD" > logs/api-scraper-newest.out 2>&1 &
+      echo "📌 Background PID: $!"
+      echo "📝 Logs: logs/api-scraper-newest.out"
+    else
+      docker exec -it $CONTAINER_NAME bash -lc "$CMD"
+    fi
+    ;;
   stop-scraper)
     echo "🛑 Attempting to stop background scraper process..."
     docker exec -it $CONTAINER_NAME pkill -f main.py && echo "✅ Scraper stopped." || echo "⚠️ No running scraper found."
