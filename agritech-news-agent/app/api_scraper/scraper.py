@@ -1,7 +1,9 @@
 import os
+import re
 import time
 import tempfile
-from typing import Dict, Optional
+from math import ceil
+from typing import Dict, Optional, List
 
 import httpx
 import feedparser
@@ -12,74 +14,74 @@ from app.uploader import upload_pdf_to_spaces
 
 ARXIV_BASE = "https://export.arxiv.org/api/query"
 
-
-def _build_url(
-    query: str,
-    start: int,
-    max_results: int,
-    sort_order: str = "ascending",
-) -> str:
-    """Build arXiv API URL."""
+def _build_url(query: str, start: int, max_results: int, sort_order: str) -> str:
     from urllib.parse import urlencode
-
     params = {
         "search_query": query,
         "start": start,
         "max_results": max_results,
         "sortBy": "submittedDate",
-        "sortOrder": sort_order,  # "ascending" (oldest) or "descending" (newest)
+        "sortOrder": sort_order,
     }
     return f"{ARXIV_BASE}?{urlencode(params)}"
 
+_MODERN_RE = re.compile(r"(?P<base>\d{4}\.\d{5})(?:v\d+)?$")
+_LEGACY_RE = re.compile(r"(?P<base>[a-z\-]+\/\d{7})(?:v\d+)?$", re.IGNORECASE)
+
+def _normalize_arxiv_id(entry_id_url: str) -> str:
+    """
+    Normalize arXiv IDs by:
+      - taking everything after /abs/
+      - replacing '/' with '_'
+      - stripping version suffix 'vN' if present
+    """
+    # Get last part after /abs/
+    try:
+        raw = entry_id_url.split("/abs/", 1)[1]
+    except IndexError:
+        raw = entry_id_url.rsplit("/", 1)[-1]
+
+    # Replace '/' with '_'
+    safe_id = raw.replace("/", "_")
+
+    # Remove version suffix if present (…v1, …v2, …v10)
+    if "v" in safe_id:
+        base, vpart = safe_id.rsplit("v", 1)
+        if vpart.isdigit():
+            return base
+    return safe_id
 
 def _entry_to_article(entry) -> Dict[str, Optional[str]]:
-    """Convert a feedparser entry → article dict matching your DB schema."""
-    # PDF link
     pdf_url = None
-    for link in entry.get("links", []):
+    for link in entry.get("links", []) or []:
         if link.get("type") == "application/pdf":
             pdf_url = link.get("href")
             break
-
-    # arXiv id without version
-    raw_id = entry.get("id", "")  # e.g. http://arxiv.org/abs/2401.01234v2
-    last = raw_id.rsplit("/", 1)[-1]
-    if "v" in last:
-        base_id = last.split("v", 1)[0]
-    else:
-        base_id = last
-
-    # authors
-    authors_list = []
+    authors_list: List[str] = []
     for a in entry.get("authors", []) or []:
-        # feedparser returns author objects with .name
-        name = getattr(a, "name", None) or a.get("name") if isinstance(a, dict) else None
+        name = getattr(a, "name", None)
+        if not name and isinstance(a, dict):
+            name = a.get("name")
         if name:
             authors_list.append(name)
-
+    raw_id = entry.get("id", "")
+    base_id = _normalize_arxiv_id(raw_id)
     return {
         "article_id": base_id,
         "title": (entry.get("title") or "").strip(),
         "authors": ", ".join(authors_list),
         "abstract": (entry.get("summary") or "").strip(),
-        "submission_date": (
-            dtparse.parse(entry.get("updated")).isoformat() if entry.get("updated") else None
-        ),
-        "originally_announced": (
-            dtparse.parse(entry.get("published")).isoformat() if entry.get("published") else None
-        ),
+        "submission_date": dtparse.parse(entry.get("updated")).isoformat() if entry.get("updated") else None,
+        "originally_announced": dtparse.parse(entry.get("published")).isoformat() if entry.get("published") else None,
         "pdf_url": pdf_url,
-        "uploaded_file_url": None,  # set if S3 upload is enabled
+        "uploaded_file_url": None,
     }
 
-
 def _maybe_upload_pdf(article: Dict[str, Optional[str]]) -> None:
-    """Upload PDF to Spaces if enabled via S3_UPLOAD=true."""
     if os.getenv("S3_UPLOAD", "false").lower() != "true":
         return
     if not article.get("pdf_url"):
         return
-
     tmp_path = None
     try:
         with httpx.stream("GET", article["pdf_url"], timeout=60) as r:
@@ -88,16 +90,15 @@ def _maybe_upload_pdf(article: Dict[str, Optional[str]]) -> None:
                 for chunk in r.iter_bytes():
                     tmp.write(chunk)
                 tmp_path = tmp.name
-
         safe_id = article["article_id"].replace("/", "_")
         uploaded_url = upload_pdf_to_spaces(tmp_path, object_name=f"{safe_id}.pdf")
         if uploaded_url:
             article["uploaded_file_url"] = uploaded_url
-            print(f"☁️ Uploaded {article['article_id']} to Spaces")
+            print(f"☁️ Uploaded {article['article_id']}")
         else:
             print(f"⚠️ Upload returned no URL for {article['article_id']}")
     except Exception as e:
-        print(f"❌ Upload failed for {article.get('article_id', '?')}: {e}")
+        print(f"❌ Upload failed for {article.get('article_id','?')}: {e}")
     finally:
         if tmp_path and os.path.exists(tmp_path):
             try:
@@ -105,69 +106,82 @@ def _maybe_upload_pdf(article: Dict[str, Optional[str]]) -> None:
             except OSError:
                 pass
 
-
 def fetch_and_store(
-    query: str = "agriculture",
-    mode: str = "newest",
+    query: str,
+    mode: str,
     page_size: int = 200,
     sleep: float = 3.0,
-    max_pages: Optional[int] = None,
+    total_results: Optional[int] = None,
+    newest_window_pages: int = 3,
+    start_page: int = 1,
 ) -> Dict[str, int]:
-    """
-    Fetch from arXiv API and store in DB.
-
-    mode:
-      - "oldest": ascending from API, insert as-is (good for big backfills)
-      - "newest": descending from API, then reverse entries BEFORE insert
-                  (so newest ends up LAST — identical to parsed_articles.reverse())
-    """
     init_db()
     existing_ids = get_all_article_ids()
-
     created = 0
-    start = 0
-    page_count = 0
-    sort_order = "ascending" if mode == "oldest" else "descending"
 
-    while True:
-        url = _build_url(query, start=start, max_results=page_size, sort_order=sort_order)
-        print(f"🔎 Fetching {url}")
-        r = httpx.get(
-            url,
-            headers={"User-Agent": "agritech-news-agent/1.0 (arxiv api)"},
-            timeout=60,
-        )
-        r.raise_for_status()
+    if mode == "oldest":
+        if total_results is None:
+            url0 = _build_url(query=query, start=0, max_results=page_size, sort_order="ascending")
+            print(f"🔎 Probe {url0}")
+            r0 = httpx.get(url0, headers={"User-Agent": "agritech-news-agent/1.0"}, timeout=60)
+            r0.raise_for_status()
+            feed0 = feedparser.parse(r0.text)
+            try:
+                total_results = int(feed0.feed.get("opensearch_totalresults", 0) or 0)
+            except Exception:
+                total_results = 0
+            if total_results <= 0:
+                total_results = len(feed0.entries or [])
+        total_pages = ceil(total_results / page_size)
+        first_page = max(1, start_page)
+        print(f"📄 Oldest-first total={total_results} size={page_size} pages={total_pages} start_page={first_page}")
+        for page in range(first_page, total_pages + 1):
+            start = (page - 1) * page_size
+            url = _build_url(query=query, start=start, max_results=page_size, sort_order="ascending")
+            print(f"⬅️ Page {page}/{total_pages} start={start}")
+            r = httpx.get(url, headers={"User-Agent": "agritech-news-agent/1.0"}, timeout=60)
+            r.raise_for_status()
+            feed = feedparser.parse(r.text)
+            entries = feed.entries or []
+            for e in entries:
+                article = _entry_to_article(e)
+                if article["article_id"] in existing_ids:
+                    print(f"🔁 Duplicate {article['article_id']} — skipping")
+                    continue
+                _maybe_upload_pdf(article)
+                insert_article(article)
+                existing_ids.add(article["article_id"])
+                created += 1
+            if page < total_pages:
+                time.sleep(sleep)
 
-        feed = feedparser.parse(r.text)
-        entries = feed.entries or []
-        if not entries:
-            break
-
-        # IMPORTANT: for newest mode, reverse the page BEFORE inserting
-        # to mimic your old parsed_articles.reverse() (newest ends up at the end)
-        if mode == "newest":
-            entries = list(entries)[::-1]
-
-        for e in entries:
-            article = _entry_to_article(e)
+    elif mode == "newest":
+        pages_to_fetch = max(1, newest_window_pages)
+        print(f"📰 Newest window pages={pages_to_fetch} size={page_size}")
+        collected: List[Dict] = []
+        for page in range(1, pages_to_fetch + 1):
+            start = (page - 1) * page_size
+            url = _build_url(query=query, start=start, max_results=page_size, sort_order="descending")
+            print(f"➡️ Newest page {page}/{pages_to_fetch} start={start}")
+            r = httpx.get(url, headers={"User-Agent": "agritech-news-agent/1.0"}, timeout=60)
+            r.raise_for_status()
+            feed = feedparser.parse(r.text)
+            entries = feed.entries or []
+            for e in entries:
+                collected.append(_entry_to_article(e))
+            if page < pages_to_fetch:
+                time.sleep(sleep)
+        collected.reverse()
+        for article in collected:
             if article["article_id"] in existing_ids:
+                print(f"🔁 Duplicate {article['article_id']} — skipping")
                 continue
-            _maybe_upload_pdf(article)  # may set uploaded_file_url
+            _maybe_upload_pdf(article)
             insert_article(article)
             existing_ids.add(article["article_id"])
             created += 1
+    else:
+        raise ValueError("mode must be 'oldest' or 'newest'")
 
-        start += len(entries)
-        page_count += 1
-
-        total = int(feed.feed.get("opensearch_totalresults", 0) or 0)
-        if max_pages and page_count >= max_pages:
-            break
-        if start >= total:
-            break
-
-        # arXiv ToU: be polite (no more than ~1 req / 3s)
-        time.sleep(sleep)
-
+    print(f"✅ Created {created}")
     return {"created": created}
