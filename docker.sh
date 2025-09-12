@@ -44,10 +44,16 @@ case "$1" in
 
     echo "⬆️ Starting container after build..."
     docker compose -f $COMPOSE_FILE up -d
+
+    echo "Forcing caddy to reload..."
+    docker exec gen-ai-caddy caddy reload --config /etc/caddy/Caddyfile --adapter caddyfile || { echo "❌ Failed to reload Caddy!"; exit 1; }
     ;;
   up)
     echo "Starting containers using $COMPOSE_FILE..."
     docker compose -f $COMPOSE_FILE up -d
+
+    echo "Forcing caddy to reload..."
+    docker exec gen-ai-caddy caddy reload --config /etc/caddy/Caddyfile --adapter caddyfile || { echo "❌ Failed to reload Caddy!"; exit 1; }
     ;;
   down)
     echo "Stopping containers using $COMPOSE_FILE..."
@@ -56,6 +62,9 @@ case "$1" in
   restart)
     echo "Restarting containers using $COMPOSE_FILE..."
     docker compose -f $COMPOSE_FILE restart
+
+    echo "Forcing caddy to reload..."
+    docker exec gen-ai-caddy caddy reload --config /etc/caddy/Caddyfile --adapter caddyfile || { echo "❌ Failed to reload Caddy!"; exit 1; }
     ;;
   logs)
     shift
