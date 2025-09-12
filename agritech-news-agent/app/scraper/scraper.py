@@ -5,7 +5,7 @@ import random
 import requests
 from bs4 import BeautifulSoup, NavigableString
 from app.db import insert_article, init_db, get_all_article_ids
-from app.scraper.uploader import upload_pdf_to_spaces
+from app.uploader import upload_pdf_to_spaces
 from dotenv import load_dotenv
 
 load_dotenv()
