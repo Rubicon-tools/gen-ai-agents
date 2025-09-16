@@ -65,9 +65,9 @@ def _entry_to_article(entry) -> Dict[str, Optional[str]]:
         if name:
             authors_list.append(name)
     raw_id = entry.get("id", "")
-    base_id = _normalize_arxiv_id(raw_id)
+    # base_id = _normalize_arxiv_id(raw_id)
     return {
-        "article_id": base_id,
+        "article_id": raw_id,
         "title": (entry.get("title") or "").strip(),
         "authors": ", ".join(authors_list),
         "abstract": (entry.get("summary") or "").strip(),
@@ -90,7 +90,8 @@ def _maybe_upload_pdf(article: Dict[str, Optional[str]]) -> None:
                 for chunk in r.iter_bytes():
                     tmp.write(chunk)
                 tmp_path = tmp.name
-        safe_id = article["article_id"].replace("/", "_")
+        # safe_id = article["article_id"].replace("/", "_")
+        safe_id = _normalize_arxiv_id(article["article_id"])
         uploaded_url = upload_pdf_to_spaces(tmp_path, object_name=f"{safe_id}.pdf")
         if uploaded_url:
             article["uploaded_file_url"] = uploaded_url
