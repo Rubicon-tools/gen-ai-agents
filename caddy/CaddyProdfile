@@ -37,7 +37,3 @@ genai.rubicon.ma {
 		Referrer-Policy no-referrer-when-downgrade
 	}
 }
-
-control-tower.rubicon.ma {
-	redir https://genai.rubicon.ma{uri}
-}
