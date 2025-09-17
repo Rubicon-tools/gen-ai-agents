@@ -28,7 +28,7 @@ genai-chatwebui.rubicon.ma {
 	}
 }
 
-genai.rubicon.ma {
+control-tower.rubicon.ma {
 	reverse_proxy tour-de-controle-syvade:3001
 	header {
 		Strict-Transport-Security max-age=31536000;
