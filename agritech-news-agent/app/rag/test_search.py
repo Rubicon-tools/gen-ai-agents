@@ -5,7 +5,7 @@ Test the quality of embeddings and search
 """
 
 from qdrant_client import QdrantClient
-from modules.embeddings import embed_texts
+from app.rag.modules.embeddings import embed_texts
 import numpy as np
 
 def test_vector_search():

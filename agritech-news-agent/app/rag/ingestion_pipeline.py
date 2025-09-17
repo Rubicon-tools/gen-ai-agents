@@ -21,10 +21,10 @@ import json
 from datetime import datetime
 from typing import List, Dict, Any
 
-from modules.ingestion import load_pdfs_from_folder, analyze_extracted_content
-from modules.chunking import split_texts_into_chunks, analyze_chunks
-from modules.embeddings import embed_texts
-from modules.vectorstore import get_qdrant_client, ensure_collection, upsert_embeddings
+from app.rag.modules.ingestion import load_pdfs_from_folder, analyze_extracted_content
+from app.rag.modules.chunking import split_texts_into_chunks, analyze_chunks
+from app.rag.modules.embeddings import embed_texts
+from app.rag.modules.vectorstore import get_qdrant_client, ensure_collection, upsert_embeddings
 
 
 class IngestionPipeline:

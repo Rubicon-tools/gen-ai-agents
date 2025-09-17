@@ -1,6 +1,6 @@
 from __future__ import annotations
 # FastAPI endpoint for RAG
-from incremental_ingestion import IncrementalIngestionPipeline
+from app.rag.incremental_ingestion import IncrementalIngestionPipeline
 import hashlib
 import io
 import os
@@ -23,13 +23,10 @@ from app.rag.modules.vectorstore import (
     get_document_hash
 )
 
-
 app = FastAPI(title="RAG Ingestion API")
-
 
 def _hash_bytes(data: bytes) -> str:
     return hashlib.md5(data).hexdigest()
-
 
 def _get_data_dir() -> str:
     """Return absolute path to the data directory (app/data)."""
@@ -37,13 +34,11 @@ def _get_data_dir() -> str:
     data_dir = os.path.normpath(os.path.join(current_dir, "..", "data"))
     return data_dir
 
-
 def _create_collection_if_missing(client, vector_size: int) -> None:
     try:
         client.get_collection("rag_collection")
     except Exception:
         ensure_collection(client, vector_size)
-
 
 def _process_text_and_upsert(text: str, metadata: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
     if not text or not text.strip():
@@ -78,11 +73,9 @@ def _process_text_and_upsert(text: str, metadata: Optional[Dict[str, Any]] = Non
         "metadata": metadata or {},
     }
 
-
 @app.get("/health")
 async def health() -> Dict[str, str]:
     return {"status": "ok"}
-
 
 @app.get("/status")
 async def status() -> Dict[str, Any]:
@@ -98,7 +91,6 @@ async def status() -> Dict[str, Any]:
         return {"status": "ok", "qdrant": info}
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Qdrant error: {e}")
-
 
 @app.post("/ask")
 async def ask(payload: Dict[str, Any]) -> str:
@@ -121,7 +113,6 @@ async def ask(payload: Dict[str, Any]) -> str:
     # Generate
     answer = generate_response(top_chunks, question)
     return answer
-
 
 @app.post("/ingest")
 async def ingest() -> Dict[str, Any]:
@@ -192,7 +183,6 @@ async def ingest() -> Dict[str, Any]:
         
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Ingestion failed: {str(e)}")
-
 
 @app.post("/incremental")
 async def incremental() -> Dict[str, Any]:

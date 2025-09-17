@@ -5,8 +5,8 @@ Shows how the system finds the relevant context for each question
 """
 
 from qdrant_client import QdrantClient
-from modules.embeddings import embed_texts
-from modules.generator import generate_response
+from app.rag.modules.embeddings import embed_texts
+from app.rag.modules.generator import generate_response
 import json
 
 def debug_query(question: str, show_full_context: bool = False):
