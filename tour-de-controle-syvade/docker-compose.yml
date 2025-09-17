@@ -1,0 +1,20 @@
+services:
+  tour-de-controle-syvade:
+    container_name: tour-de-controle-syvade
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        NODE_ENV: ${NODE_ENV:-production}
+    restart: unless-stopped
+    environment:
+      NODE_ENV: ${NODE_ENV:-production}
+    volumes:
+      - .:/app
+      - /app/node_modules
+    networks:
+      - gen-ai-network
+
+networks:
+  gen-ai-network:
+    external: true

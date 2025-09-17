@@ -1,33 +1,39 @@
 genai-docs.rubicon.ma {
-    reverse_proxy outline-app:3000
-    header {
-        Strict-Transport-Security max-age=31536000;
-        X-Content-Type-Options nosniff
-        X-Frame-Options DENY
-        Referrer-Policy no-referrer-when-downgrade
-    }
+	reverse_proxy outline-app:3000
+	header {
+		Strict-Transport-Security max-age=31536000;
+		X-Content-Type-Options nosniff
+		X-Frame-Options DENY
+		Referrer-Policy no-referrer-when-downgrade
+	}
 }
 
 genai-n8n.rubicon.ma {
-    reverse_proxy n8n-builder-n8n:5678
-    header {
-        Strict-Transport-Security max-age=31536000;
-        X-Content-Type-Options nosniff
-        X-Frame-Options DENY
-        Referrer-Policy no-referrer-when-downgrade
-    }
+	reverse_proxy n8n-builder-n8n:5678
+	header {
+		Strict-Transport-Security max-age=31536000;
+		X-Content-Type-Options nosniff
+		X-Frame-Options DENY
+		Referrer-Policy no-referrer-when-downgrade
+	}
 }
 
 genai-chatwebui.rubicon.ma {
-    reverse_proxy gen-ai-open-webui:8080
-    header {
-        Strict-Transport-Security max-age=31536000;
-        X-Content-Type-Options nosniff
-        X-Frame-Options DENY
-        Referrer-Policy no-referrer-when-downgrade
-    }
+	reverse_proxy gen-ai-open-webui:8080
+	header {
+		Strict-Transport-Security max-age=31536000;
+		X-Content-Type-Options nosniff
+		X-Frame-Options DENY
+		Referrer-Policy no-referrer-when-downgrade
+	}
 }
 
 genai.rubicon.ma {
-    redir https://genai-docs.rubicon.ma{uri}
+	reverse_proxy tour-de-controle-syvade:3001
+	header {
+		Strict-Transport-Security max-age=31536000;
+		X-Content-Type-Options nosniff
+		X-Frame-Options DENY
+		Referrer-Policy no-referrer-when-downgrade
+	}
 }
