@@ -19,6 +19,16 @@ fi
 
 CONTAINER_NAME="gen-ai-service-tools"
 
+remove_caddy_volumes() {
+  for volume in gen-ai-caddy_data gen-ai-caddy_config; do
+    if docker volume rm "$volume" >/dev/null 2>&1; then
+      echo "✅ $volume removed"
+    else
+      echo "ℹ️ $volume already removed or not found"
+    fi
+  done
+}
+
 case "$1" in
   export)
     echo "Exporting table using $COMPOSE_FILE..."
@@ -42,8 +52,7 @@ case "$1" in
     ;;
   build)
     echo "Removing caddy volumes..."
-    docker volume rm gen-ai-caddy_data
-    docker volume rm gen-ai-caddy_config
+    remove_caddy_volumes
 
     echo "Building Docker image using $COMPOSE_FILE..."
     docker compose -f $COMPOSE_FILE build
@@ -53,8 +62,7 @@ case "$1" in
     ;;
   up)
     echo "Removing caddy volumes..."
-    docker volume rm gen-ai-caddy_data
-    docker volume rm gen-ai-caddy_config
+    remove_caddy_volumes
 
     echo "Starting containers using $COMPOSE_FILE..."
     docker compose -f $COMPOSE_FILE up -d
@@ -65,8 +73,7 @@ case "$1" in
     ;;
   restart)
     echo "Removing caddy volumes..."
-    docker volume rm gen-ai-caddy_data
-    docker volume rm gen-ai-caddy_config
+    remove_caddy_volumes
 
     echo "Restarting containers using $COMPOSE_FILE..."
     docker compose -f $COMPOSE_FILE restart
