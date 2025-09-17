@@ -33,6 +33,22 @@ services:
     networks:
       - gen-ai-network
 
+  rag-api:
+    container_name: agritech-news-agent-rag-api
+    build: .
+    env_file:
+      - .env
+    volumes:
+      - .:/app
+    command: python -m uvicorn app.rag.api:app --host 0.0.0.0 --port 8000
+    ports:
+      - "8000:8000"
+    restart: unless-stopped
+    depends_on:
+      - qdrant
+    networks:
+      - gen-ai-network
+
 volumes:
   agritech-news-agent-postgres-data:
     name: agritech-news-agent-postgres-data

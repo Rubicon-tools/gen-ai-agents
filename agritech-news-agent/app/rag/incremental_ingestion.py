@@ -20,7 +20,7 @@ from typing import List, Dict, Any
 
 # Import des modules
 from modules.ingestion import load_pdfs_from_folder
-from modules.chunking import split_texts_into_chunks
+from modules.chunking import split_texts_into_chunks 
 from modules.embeddings import embed_texts
 from modules.vectorstore import (
     get_qdrant_client,
