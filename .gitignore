@@ -2,3 +2,7 @@
 .vscode
 .env
 *.csv
+
+# Any ingestion results JSON in any folder
+*/ingestion_results.json
+*/incremental_ingestion_results.json
