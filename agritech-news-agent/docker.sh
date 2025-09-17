@@ -17,7 +17,7 @@ if [ -n "$ENV" ] && [ -f "$SCRIPT_DIR/docker-compose-${ENV}.yml" ]; then
   COMPOSE_FILE="docker-compose-${ENV}.yml"
 fi
 
-CONTAINER_NAME="agritech-news-agent"
+CONTAINER_NAME="agritech-news-agent-app"
 
 case "$1" in
   build)
@@ -43,6 +43,18 @@ case "$1" in
     shift
     echo "Showing logs using $COMPOSE_FILE..."
     docker compose -f $COMPOSE_FILE logs "$@"
+    ;;
+  rag)
+    echo "🤖 Launching RAG Q&A interface inside the container..."
+    docker exec -it -w /app/app $CONTAINER_NAME python rag/main.py
+    ;;
+  rag-ingest)
+    echo "📥 Running full RAG ingestion pipeline inside the container..."
+    docker exec -it -w /app/app $CONTAINER_NAME python rag/ingestion_pipeline.py
+    ;;
+  rag-incremental)
+    echo "➕ Running incremental RAG ingestion inside the container..."
+    docker exec -it -w /app/app $CONTAINER_NAME python rag/incremental_ingestion.py
     ;;
   scrape)
     echo "📄 Running scraper inside the container..."

@@ -2,3 +2,5 @@ __pycache__/
 *.pyc
 .venv/
 .env
+app/ingestion_results.json
+app/data
