@@ -17,6 +17,8 @@ if [ -n "$NODE_ENV" ] && [ -f "$SCRIPT_DIR/docker-compose-${NODE_ENV}.yml" ]; th
   COMPOSE_FILE="docker-compose-${NODE_ENV}.yml"
 fi
 
+CONTAINER_NAME="gen-ai-service-tools"
+
 case "$1" in
   export)
     echo "Exporting table using $COMPOSE_FILE..."
@@ -24,7 +26,7 @@ case "$1" in
       echo "Usage: bash docker.sh export <table_name>"
       exit 1
     fi
-    docker compose -f $COMPOSE_FILE run --rm app python3 table_csv_tool.py export "$2"
+    docker compose -f $COMPOSE_FILE run --rm $CONTAINER_NAME python3 table_csv_tool.py export "$2"
     ;;
   import)
     echo "Importing CSV file using $COMPOSE_FILE..."
@@ -36,7 +38,7 @@ case "$1" in
       echo "CSV file '$2' not found in script directory."
       exit 1
     fi
-    docker compose -f $COMPOSE_FILE run --rm -v "$SCRIPT_DIR/$2":/app/"$2" app python3 table_csv_tool.py import "$2"
+    docker compose -f $COMPOSE_FILE run --rm -v "$SCRIPT_DIR/$2":/app/"$2" $CONTAINER_NAME python3 table_csv_tool.py import "$2"
     ;;
   build)
     echo "Building Docker image using $COMPOSE_FILE..."

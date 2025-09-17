@@ -1,6 +1,7 @@
 import sys
 import os
 import psycopg2
+import csv
 
 DB_HOST = os.getenv("POSTGRES_HOST", "your_host")
 DB_PORT = os.getenv("POSTGRES_PORT", "your_port")
@@ -24,10 +25,25 @@ def import_table(csv_path, table_name):
         host=DB_HOST, port=DB_PORT, dbname=DB_NAME, user=DB_USER, password=DB_PASS
     )
     cur = conn.cursor()
+
+    # Step 1: Read the header row from CSV to get column names
     with open(csv_path, "r", encoding="utf-8") as f:
-        cur.copy_expert(f"COPY {table_name} FROM STDIN WITH CSV HEADER", f)
+        reader = csv.reader(f)
+        headers = next(reader)  # first row
+    # Sanitize column names (wrap in quotes to preserve case/special chars)
+    columns = ', '.join(f'"{col}" TEXT' for col in headers)
+
+    # Step 2: Create table if not exists
+    create_sql = f'CREATE TABLE IF NOT EXISTS "{table_name}" ({columns});'
+    cur.execute(create_sql)
+
+    # Step 3: Import data
+    with open(csv_path, "r", encoding="utf-8") as f:
+        cur.copy_expert(f'COPY "{table_name}" FROM STDIN WITH CSV HEADER', f)
+
     conn.commit()
     print(f"✅ Imported data from '{csv_path}' into table '{table_name}'")
+
     cur.close()
     conn.close()
 
