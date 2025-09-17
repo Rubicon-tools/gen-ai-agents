@@ -41,32 +41,35 @@ case "$1" in
     docker compose -f $COMPOSE_FILE run --rm -v "$SCRIPT_DIR/$2":/app/"$2" $CONTAINER_NAME python3 table_csv_tool.py import "$2"
     ;;
   build)
+    echo "Removing caddy volumes..."
+    docker volume rm gen-ai-caddy_data
+    docker volume rm gen-ai-caddy_config
+
     echo "Building Docker image using $COMPOSE_FILE..."
     docker compose -f $COMPOSE_FILE build
 
     echo "⬆️ Starting container after build..."
     docker compose -f $COMPOSE_FILE up -d
-
-    echo "Forcing caddy to reload..."
-    docker exec gen-ai-caddy caddy reload --config /etc/caddy/Caddyfile --adapter caddyfile || { echo "❌ Failed to reload Caddy!"; exit 1; }
     ;;
   up)
+    echo "Removing caddy volumes..."
+    docker volume rm gen-ai-caddy_data
+    docker volume rm gen-ai-caddy_config
+
     echo "Starting containers using $COMPOSE_FILE..."
     docker compose -f $COMPOSE_FILE up -d
-
-    echo "Forcing caddy to reload..."
-    docker exec gen-ai-caddy caddy reload --config /etc/caddy/Caddyfile --adapter caddyfile || { echo "❌ Failed to reload Caddy!"; exit 1; }
     ;;
   down)
     echo "Stopping containers using $COMPOSE_FILE..."
     docker compose -f $COMPOSE_FILE down
     ;;
   restart)
+    echo "Removing caddy volumes..."
+    docker volume rm gen-ai-caddy_data
+    docker volume rm gen-ai-caddy_config
+
     echo "Restarting containers using $COMPOSE_FILE..."
     docker compose -f $COMPOSE_FILE restart
-
-    echo "Forcing caddy to reload..."
-    docker exec gen-ai-caddy caddy reload --config /etc/caddy/Caddyfile --adapter caddyfile || { echo "❌ Failed to reload Caddy!"; exit 1; }
     ;;
   logs)
     shift
