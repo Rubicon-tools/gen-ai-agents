@@ -42,6 +42,11 @@ services:
     env_file:
       - .env
     restart: unless-stopped
+    environment:
+    - PROVIDERS=openai
+    - OPENAI_API_BASE_URL=http://agritech-news-agent-rag-api:8000/v1
+    - OPENAI_API_KEY=dummy-key
+    - DEFAULT_MODELS=rag-agritech-agent
     networks:
       - gen-ai-network
 
