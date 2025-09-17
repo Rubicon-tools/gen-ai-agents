@@ -18,10 +18,6 @@ RUN apt-get update && apt-get install -y \
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Install RAG-specific dependencies separately for better layer caching
-COPY app/rag/requirements.txt app/rag/requirements.txt
-RUN pip install --no-cache-dir -r app/rag/requirements.txt
-
 COPY . .
 
 # Default: keep container alive
