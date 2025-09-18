@@ -14,7 +14,7 @@ dev.genai-n8n.rubicon.ma {
 
 dev.genai-chatwebui.rubicon.ma {
 	tls /etc/caddy/dev.genai-chatwebui.rubicon.ma.pem /etc/caddy/dev.genai-chatwebui.rubicon.ma-key.pem
-	reverse_proxy open-webui:3003 {
+	reverse_proxy gen-ai-open-webui:8080 {
 		header_down Strict-Transport-Security "max-age=31536000"
 	}
 }
