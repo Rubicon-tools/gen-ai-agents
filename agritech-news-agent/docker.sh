@@ -56,6 +56,20 @@ case "$1" in
     echo "➕ Running incremental RAG ingestion inside the container..."
     docker exec -it -w /app/app $CONTAINER_NAME python rag/incremental_ingestion.py
     ;;
+  rag-api-start)
+    echo "🚀 Starting RAG API service..."
+    docker compose -f $COMPOSE_FILE up -d rag-api
+    echo "📡 RAG API available at: http://localhost:8000"
+    echo "📚 API docs at: http://localhost:8000/docs"
+    ;;
+  rag-api-stop)
+    echo "🛑 Stopping RAG API service..."
+    docker compose -f $COMPOSE_FILE stop rag-api
+    ;;
+  rag-api-logs)
+    echo "📋 Showing RAG API logs..."
+    docker compose -f $COMPOSE_FILE logs -f rag-api
+    ;;
   scrape)
     echo "📄 Running scraper inside the container..."
 
@@ -142,6 +156,12 @@ case "$1" in
     echo "  bash $0 scrape [limit] [-continue] [-bg]"
     echo "  bash $0 scrape-newest [-bg]"
     echo "  bash $0 stop-scraper"
+    echo "  bash $0 rag"
+    echo "  bash $0 rag-ingest"
+    echo "  bash $0 rag-incremental"
+    echo "  bash $0 rag-api-start"
+    echo "  bash $0 rag-api-stop"
+    echo "  bash $0 rag-api-logs"
     exit 1
     ;;
 esac

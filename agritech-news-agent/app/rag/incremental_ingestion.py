@@ -19,10 +19,10 @@ import json
 from typing import List, Dict, Any
 
 # Import des modules
-from modules.ingestion import load_pdfs_from_folder
-from modules.chunking import split_texts_into_chunks
-from modules.embeddings import embed_texts
-from modules.vectorstore import (
+from app.rag.modules.ingestion import load_pdfs_from_folder
+from app.rag.modules.chunking import split_texts_into_chunks 
+from app.rag.modules.embeddings import embed_texts
+from app.rag.modules.vectorstore import (
     get_qdrant_client,
     get_existing_documents,
     upsert_embeddings_incremental,
@@ -30,10 +30,11 @@ from modules.vectorstore import (
 )
 
 class IncrementalIngestionPipeline:
-    def __init__(self, data_dir: str = "data"):
+    def __init__(self, data_dir: str = "data", auto_confirm: bool = False):
         self.data_dir = data_dir
         self.qdrant_client = get_qdrant_client()
         self.collection_name = "rag_collection"
+        self.auto_confirm = auto_confirm
         
     def get_pdf_files_with_hashes(self) -> Dict[str, str]:
         """Retrieve all PDF files with their hashes."""
@@ -139,11 +140,14 @@ class IncrementalIngestionPipeline:
         for doc in new_documents:
             print(f"   • {doc}")
         
-        # Demander confirmation
-        response = input(f"\n🚀 Traiter ces {len(new_documents)} document(s) ? (y/N): ")
-        if response.lower() != 'y':
-            print("❌ Cancelled by the user.")
-            return {"status": "cancelled"}
+        # Confirmation logic
+        if not getattr(self, "auto_confirm", False):
+            response = input(f"\n🚀 Traiter ces {len(new_documents)} document(s) ? (y/N): ")
+            if response.lower() != 'y':
+                print("❌ Cancelled by the user.")
+                return {"status": "cancelled"}
+        else:
+            print("⚡ Auto-confirm enabled, proceeding without prompt...")
         
         print(f"\n🚀 STARTING INCREMENTAL INGESTION")
         print("=" * 50)

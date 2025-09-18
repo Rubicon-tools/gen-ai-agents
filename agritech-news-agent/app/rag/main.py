@@ -13,9 +13,9 @@ warnings.filterwarnings("ignore", message=".*urllib3.*OpenSSL.*")
 import os
 from typing import List
 
-from modules.vectorstore import get_qdrant_client, search_top_k
-from modules.embeddings import embed_texts
-from modules.generator import generate_response
+from app.rag.modules.vectorstore import get_qdrant_client, search_top_k
+from app.rag.modules.embeddings import embed_texts
+from app.rag.modules.generator import generate_response
 from dotenv import load_dotenv
 
 
