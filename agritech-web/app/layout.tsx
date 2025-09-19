@@ -1,0 +1,36 @@
+import type React from "react"
+import "./globals.css"
+import { Sidebar } from "@/components/sidebar"
+import { Inter } from "next/font/google"
+import { GlobalFloatingChat } from "@/components/global-floating-chat"
+
+const inter = Inter({
+  subsets: ["latin"],
+  variable: "--font-inter",
+})
+
+export default function RootLayout({ children }: { children: React.ReactNode }) {
+  return (
+    <html lang="en" className={inter.variable}>
+      <head>
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        <link
+          href="https://fonts.googleapis.com/css2?family=Chronicle+Display:wght@400;500;600;700&display=swap"
+          rel="stylesheet"
+        />
+      </head>
+      <body>
+        <div className="flex h-screen bg-background">
+          <Sidebar />
+          <main className="flex-1 overflow-auto">{children}</main>
+        </div>
+        <GlobalFloatingChat />
+      </body>
+    </html>
+  )
+}
+
+export const metadata = {
+      generator: 'v0.app'
+    };
