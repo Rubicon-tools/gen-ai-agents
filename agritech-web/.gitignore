@@ -3,3 +3,6 @@ node_modules
 .vscode
 *.log
 .env
+
+# clerk configuration (can include secrets)
+/.clerk/

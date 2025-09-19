@@ -1,3 +1,5 @@
+"use client"
+
 import type React from "react"
 import "./globals.css"
 import { Sidebar } from "@/components/sidebar"
@@ -6,6 +8,7 @@ import { GlobalFloatingChat } from "@/components/global-floating-chat"
 import {
   ClerkProvider,
 } from "@clerk/nextjs";
+import { usePathname } from "next/navigation";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -13,6 +16,8 @@ const inter = Inter({
 })
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
+   const pathname = usePathname();
+  const isAuthPage = pathname.startsWith("/signin") || pathname.startsWith("/signup");
   return (
         <ClerkProvider>
     <html lang="en" className={inter.variable}>
@@ -26,7 +31,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       </head>
         <body>
           <div className="flex h-screen bg-background">
-            <Sidebar />
+            {!isAuthPage && <Sidebar />}
             <main className="flex-1 overflow-auto">{children}</main>
           </div>
           <GlobalFloatingChat />
@@ -35,7 +40,3 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       </ClerkProvider>
   )
 }
-
-export const metadata = {
-      generator: 'v0.app'
-    };
