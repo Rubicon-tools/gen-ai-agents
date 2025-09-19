@@ -19,10 +19,12 @@ import {
   Globe,
   Mail,
   GraduationCap,
+  LogOut
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
+import { SignOutButton } from "@clerk/nextjs"
 
 const menuItems = [
   { icon: Home, label: "Accueil", href: "/", notifications: 0 },
@@ -36,6 +38,7 @@ const menuItems = [
   { icon: Mail, label: "Newsletter", href: "/newsletter", notifications: 0 },
   { icon: MessageSquare, label: "Chat IA", href: "/chat", notifications: 0 },
   { icon: Settings, label: "Paramètres", href: "/settings", notifications: 0 },
+  { icon: LogOut,label: "Déconnexion", href: null, isLogout: true },
 ]
 
 export function Sidebar() {
@@ -98,6 +101,16 @@ export function Sidebar() {
         <div className="space-y-1">
           {menuItems.map((item, index) => {
             const isActive = pathname === item.href
+             if (item.isLogout) {
+                return (
+                  <SignOutButton key={index}>
+                      <button className="flex items-center gap-3 text-[#D91213] hover:bg-[#EBEDEE] w-full p-2 rounded-lg transition-colors">
+                        <LogOut className="w-5 h-5" />
+                        <span className="font-medium">Se déconnecter</span>
+                      </button>
+                    </SignOutButton>
+                )
+            }
             return (
               <Link key={index} href={item.href}>
                 <Button
