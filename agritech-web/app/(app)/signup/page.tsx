@@ -138,6 +138,9 @@ export default function SignupPage() {
                 />
               </div>
 
+              {/* Smart CAPTCHA visible */}
+              <div id="clerk-captcha"></div>
+
               {error && <p className="text-red-500 text-sm">{error}</p>}
 
               <Button type="submit" className="w-full bg-[#15803d] hover:bg-[#15803d]/90 text-white" disabled={loading}>
