@@ -1,0 +1,8 @@
+node_modules
+.next
+.vscode
+*.log
+.env
+
+# clerk configuration (can include secrets)
+/.clerk/

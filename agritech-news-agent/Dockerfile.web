@@ -1,0 +1,20 @@
+# syntax=docker/dockerfile:1
+
+ARG ENV=dev
+FROM node:20-alpine
+
+WORKDIR /app
+
+RUN npm install -g pnpm
+
+COPY web/package.json web/pnpm-lock.yaml ./
+RUN pnpm install --no-frozen-lockfile
+
+COPY web .
+
+# Only build in production
+RUN if [ "$ENV" = "prod" ]; then pnpm build; fi
+
+EXPOSE 3002
+
+CMD ["sh", "-c", "if [ \"$ENV\" = \"dev\" ]; then pnpm dev --port 3002; else pnpm start --port 3002; fi"]

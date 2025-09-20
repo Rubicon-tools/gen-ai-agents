@@ -18,3 +18,10 @@ dev.genai-chatwebui.rubicon.ma {
 		header_down Strict-Transport-Security "max-age=31536000"
 	}
 }
+
+dev.genai-agritech.rubicon.ma {
+	tls /etc/caddy/dev.genai-agritech.rubicon.ma.pem /etc/caddy/dev.genai-agritech.rubicon.ma-key.pem
+	reverse_proxy agritech-news-agent-web-app:3002 {
+		header_down Strict-Transport-Security "max-age=31536000"
+	}
+}

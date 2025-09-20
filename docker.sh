@@ -23,8 +23,6 @@ remove_caddy_volumes() {
   for volume in gen-ai-caddy_data gen-ai-caddy_config; do
     if docker volume rm "$volume" >/dev/null 2>&1; then
       echo "✅ $volume removed"
-    else
-      echo "ℹ️ $volume already removed or not found"
     fi
   done
 }

@@ -27,6 +27,8 @@ services:
       - ./caddy/keys/dev.genai-n8n.rubicon.ma-key.pem:/etc/caddy/dev.genai-n8n.rubicon.ma-key.pem
       - ./caddy/keys/dev.genai-chatwebui.rubicon.ma.pem:/etc/caddy/dev.genai-chatwebui.rubicon.ma.pem
       - ./caddy/keys/dev.genai-chatwebui.rubicon.ma-key.pem:/etc/caddy/dev.genai-chatwebui.rubicon.ma-key.pem
+      - ./caddy/keys/dev.genai-agritech.rubicon.ma.pem:/etc/caddy/dev.genai-agritech.rubicon.ma.pem
+      - ./caddy/keys/dev.genai-agritech.rubicon.ma-key.pem:/etc/caddy/dev.genai-agritech.rubicon.ma-key.pem
       - gen-ai-caddy-data:/data
       - gen-ai-caddy-config:/config
     networks:
