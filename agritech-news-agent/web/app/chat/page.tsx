@@ -129,7 +129,7 @@ export default function ChatPage() {
             </div>
           )}
 
-          <div className="fixed bottom-0 left-[230px] right-0 border-t border-gray-200 z-50">
+          <div className="fixed bottom-0 left-[230px] right-0 border-gray-200 z-50">
             <div className="container mx-auto px-6 py-4">
               <div className="max-w-4xl mx-auto">
                 <div className="flex justify-center">
