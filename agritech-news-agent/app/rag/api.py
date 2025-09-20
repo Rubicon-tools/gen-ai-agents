@@ -6,6 +6,7 @@ from typing import Any, Dict, List, Optional
 from fastapi import FastAPI, HTTPException
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
+from fastapi.middleware.cors import CORSMiddleware
 
 # ---- RAG utils ----
 from app.rag.modules.embeddings import embed_texts
@@ -16,6 +17,13 @@ from app.rag.incremental_ingestion import IncrementalIngestionPipeline
 
 app = FastAPI(title="RAG API")
 
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:3002"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 # ---------- Incremental Ingestion ----------
 @app.post("/ingest_incrementally")
@@ -98,36 +106,53 @@ async def list_models():
 # ---------- Chat completions (OpenAI-compatible) ----------
 @app.post("/v1/chat/completions", response_model=ChatResponse)
 async def chat_completions(request: ChatRequest):
-    # Take last user message
-    user_message = next((m for m in reversed(request.messages) if m.role == "user"), None)
-    if not user_message:
-        raise HTTPException(status_code=400, detail="No user message found")
+    try:
+        # Take last user message
+        user_message = next((m for m in reversed(request.messages) if m.role == "user"), None)
+        if not user_message:
+            raise HTTPException(status_code=400, detail="No user message found")
 
-    question = user_message.content.strip()
+        question = user_message.content.strip()
+        if not question:
+            raise HTTPException(status_code=400, detail="Empty user message")
 
-    # ---- Embed & search ----
-    query_vec = embed_texts([question])[0]
-    if not query_vec:
-        raise HTTPException(status_code=500, detail="Failed to embed question")
+        # ---- Embed & search ----
+        try:
+            query_vec = embed_texts([question])[0]
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=f"Embedding failed: {e}")
 
-    client = get_qdrant_client()
-    top_chunks = search_top_k(client, query_vec, k=3)
+        if not query_vec:
+            raise HTTPException(status_code=500, detail="Failed to embed question")
 
-    if not top_chunks:
-        answer = "Aucun contexte trouvé pour répondre à votre question."
-    else:
-        # Generate final response from retrieved chunks
-        answer = generate_response(top_chunks, question)
+        try:
+            client = get_qdrant_client()
+            top_chunks = search_top_k(client, query_vec, k=3)
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=f"Vector search failed: {e}")
 
-    # ---- Return OpenAI-style JSON ----
-    return ChatResponse(
-        id=f"chatcmpl-{int(time.time())}",
-        model=request.model,
-        created=int(time.time()),
-        choices=[
-            ChatChoice(
-                index=0,
-                message=Message(role="assistant", content=answer),
-            )
-        ],
-    )
+        if not top_chunks:
+            answer = "Aucun contexte trouvé pour répondre à votre question."
+        else:
+            # Generate final response from retrieved chunks
+            try:
+                answer = generate_response(top_chunks, question)
+            except Exception as e:
+                raise HTTPException(status_code=500, detail=f"Response generation failed: {e}")
+
+        # ---- Return OpenAI-style JSON ----
+        return ChatResponse(
+            id=f"chatcmpl-{int(time.time())}",
+            model=request.model or "default-model",
+            created=int(time.time()),
+            choices=[
+                ChatChoice(
+                    index=0,
+                    message=Message(role="assistant", content=answer),
+                )
+            ],
+        )
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Unexpected server error: {e}")
