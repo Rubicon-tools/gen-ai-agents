@@ -13,7 +13,18 @@ export default function SignupPage() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [pendingVerification, setPendingVerification] = useState(false)
-  const [code, setCode] = useState("")
+  const [form, setForm] = useState({
+    name: "",
+    email: "",
+    password: "",
+    confirmPassword: "",
+    code: "",
+  })
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target
+    setForm((prev) => ({ ...prev, [name]: value }))
+  }
 
   // Submitting the signup form
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
@@ -23,11 +34,10 @@ export default function SignupPage() {
     setLoading(true)
     setError(null)
 
-    const formData = new FormData(e.currentTarget)
-    const fullName = formData.get("name") as string
-    const email = formData.get("email") as string
-    const password = formData.get("password") as string
-    const confirmPassword = formData.get("confirmPassword") as string
+    const fullName = form.name
+    const email = form.email
+    const password = form.password
+    const confirmPassword = form.confirmPassword
 
     if (password !== confirmPassword) {
       setError("Passwords do not match")
@@ -39,7 +49,7 @@ export default function SignupPage() {
     const lastName = rest.join(" ")
 
     try {
-      const result = await signUp.create({
+      await signUp.create({
         emailAddress: email,
         password,
         firstName,
@@ -64,7 +74,7 @@ export default function SignupPage() {
     setError(null)
 
     try {
-      const result = await signUp.attemptEmailAddressVerification({ code })
+      const result = await signUp.attemptEmailAddressVerification({ code: form.code })
 
       if (result.status === "complete") {
         await setActive({ session: result.createdSessionId })
@@ -99,6 +109,8 @@ export default function SignupPage() {
                   id="name"
                   name="name"
                   type="text"
+                  value={form.name}
+                  onChange={handleChange}
                   placeholder="Enter your full name"
                   className="border-[#15803d]/30 focus:border-[#15803d] focus:ring-[#15803d]/20"
                   required
@@ -110,6 +122,8 @@ export default function SignupPage() {
                   id="email"
                   name="email"
                   type="email"
+                  value={form.email}
+                  onChange={handleChange}
                   placeholder="Enter your email"
                   className="border-[#15803d]/30 focus:border-[#15803d] focus:ring-[#15803d]/20"
                   required
@@ -121,6 +135,8 @@ export default function SignupPage() {
                   id="password"
                   name="password"
                   type="password"
+                  value={form.password}
+                  onChange={handleChange}
                   placeholder="Create a password"
                   className="border-[#15803d]/30 focus:border-[#15803d] focus:ring-[#15803d]/20"
                   required
@@ -132,6 +148,8 @@ export default function SignupPage() {
                   id="confirmPassword"
                   name="confirmPassword"
                   type="password"
+                  value={form.confirmPassword}
+                  onChange={handleChange}
                   placeholder="Confirm your password"
                   className="border-[#15803d]/30 focus:border-[#15803d] focus:ring-[#15803d]/20"
                   required
@@ -143,7 +161,11 @@ export default function SignupPage() {
 
               {error && <p className="text-red-500 text-sm">{error}</p>}
 
-              <Button type="submit" className="w-full bg-[#15803d] hover:bg-[#15803d]/90 text-white" disabled={loading}>
+              <Button
+                type="submit"
+                className="w-full bg-[#15803d] hover:bg-[#15803d]/90 text-white"
+                disabled={loading}
+              >
                 {loading ? "Creating account..." : "Create Account"}
               </Button>
             </form>
@@ -153,10 +175,11 @@ export default function SignupPage() {
                 <Label htmlFor="code" className="text-[#15803d] font-medium">Verification Code</Label>
                 <Input
                   id="code"
+                  name="code"
                   type="text"
+                  value={form.code}
+                  onChange={handleChange}
                   placeholder="Enter the code"
-                  value={code}
-                  onChange={(e) => setCode(e.target.value)}
                   className="border-[#15803d]/30 focus:border-[#15803d] focus:ring-[#15803d]/20 text-center"
                   required
                 />
@@ -164,7 +187,11 @@ export default function SignupPage() {
 
               {error && <p className="text-red-500 text-sm">{error}</p>}
 
-              <Button type="submit" className="w-full bg-[#15803d] hover:bg-[#15803d]/90 text-white" disabled={loading}>
+              <Button
+                type="submit"
+                className="w-full bg-[#15803d] hover:bg-[#15803d]/90 text-white"
+                disabled={loading}
+              >
                 {loading ? "Verifying..." : "Verify Email"}
               </Button>
             </form>
