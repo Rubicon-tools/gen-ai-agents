@@ -23,8 +23,9 @@ import {
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import Link from "next/link"
-import { usePathname } from "next/navigation"
-import { SignOutButton } from "@clerk/nextjs"
+import { usePathname } from "next/navigation";
+import { SignOutButton } from "@clerk/nextjs";
+import { useUser } from "@clerk/nextjs";
 
 const menuItems = [
   { icon: Home, label: "Accueil", href: "/", notifications: 0 },
@@ -43,7 +44,11 @@ const menuItems = [
 
 export function Sidebar() {
   const [isCollapsed, setIsCollapsed] = useState(false)
-  const pathname = usePathname()
+  const pathname = usePathname();
+  const { user } = useUser()
+  if (!user) return null
+  
+  const fullName = `${user.firstName} ${user.lastName}`
 
   return (
     <div
@@ -85,7 +90,7 @@ export function Sidebar() {
           </div>
           {!isCollapsed && (
             <div className="flex-1">
-              <p className="font-semibold text-sidebar-foreground">Badr</p>
+              <p className="font-semibold text-sidebar-foreground">{fullName}</p>
               <p className="text-xs text-sidebar-foreground/70">Analyste AgriTech Senior</p>
             </div>
           )}
@@ -103,12 +108,26 @@ export function Sidebar() {
             const isActive = pathname === item.href
              if (item.isLogout) {
                 return (
-                  <SignOutButton key={index}>
-                      <button className="flex items-center gap-3 text-[#D91213] hover:bg-[#EBEDEE] w-full p-2 rounded-lg transition-colors">
-                        <LogOut className="w-5 h-5" />
-                        <span className="font-medium">Se déconnecter</span>
-                      </button>
+                   <Button
+                      key={index}
+                      variant={isActive ? "default" : "ghost"}
+                      className={cn(
+                        "w-full justify-start gap-3 h-12 rounded-lg transition-all duration-200",
+                        isActive
+                          ? "bg-gradient-to-r from-primary to-primary/90 text-primary-foreground shadow-md hover:shadow-lg"
+                          : "text-sidebar-foreground hover:bg-gradient-to-r hover:from-sidebar-accent/50 hover:to-transparent hover:text-sidebar-accent-foreground",
+                        isCollapsed && "justify-center px-0",
+                      )}
+                  >
+                  <LogOut className="w-5 h-5" />
+                  {!isCollapsed && (
+                    <>
+                     <SignOutButton key={index}>
+                        <span className="flex-1 text-left font-medium">Se déconnecter</span>
                     </SignOutButton>
+                    </>
+                  )}
+                </Button>
                 )
             }
             return (

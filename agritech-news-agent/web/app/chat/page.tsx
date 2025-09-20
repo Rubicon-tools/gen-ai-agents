@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Send, Bot, Sparkles, FileText, Mail, Cpu, TrendingUp, Paperclip, ImageIcon } from "lucide-react"
 import { PageHeader } from "@/components/page-header"
+import { useUser } from "@clerk/nextjs";
 
 const suggestedPrompts = [
   {
@@ -75,6 +76,10 @@ export default function ChatPage() {
     setMessage(prompt.prompt)
   }
 
+  const { user } = useUser()
+  if (!user) return null
+  const fullName = `${user.firstName} ${user.lastName}`
+
   return (
     <div className="min-h-screen bg-background">
       {messages.length > 0 && (
@@ -91,9 +96,9 @@ export default function ChatPage() {
             <div className="text-center py-16">
               <div className="mb-16">
                 <h1 className="text-4xl font-bold mb-4">
-                  <span className="text-gray-900">Bonjour </span>
+                  <span className="text-gray-900">Bonjour  </span>
                   <span className="bg-gradient-to-r from-[#1B4332] via-[#2D6A4F] to-[#95D5B2] bg-clip-text text-transparent">
-                    Badr
+                    {fullName}
                   </span>
                 </h1>
                 <h2 className="text-4xl font-medium bg-gradient-to-r from-[#1B4332] to-[#2D6A4F] bg-clip-text text-transparent mb-8">
