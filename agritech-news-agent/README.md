@@ -31,8 +31,10 @@ agritech-news-agent/
 │   └── rag/                     
 │       ├── __init__.py
 │       └── api.py
-├── Dockerfile
-├── docker-compose.yml
+├── Dockerfile.app
+├── Dockerfile.web
+├── docker-compose-dev.yml
+├── docker-compose-prod.yml
 ├── docker.sh
 ├── requirements.txt
 └── README.md

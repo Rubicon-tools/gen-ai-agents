@@ -17,7 +17,7 @@ if [ -n "$ENV" ] && [ -f "$SCRIPT_DIR/docker-compose-${ENV}.yml" ]; then
   COMPOSE_FILE="docker-compose-${ENV}.yml"
 fi
 
-CONTAINER_NAME="agritech-news-agent-app"
+RAG_SCRAPER_CONTAINER_NAME="agritech-news-agent-rag-scraper-app"
 
 case "$1" in
   build)
@@ -46,15 +46,15 @@ case "$1" in
     ;;
   rag)
     echo "🤖 Launching RAG Q&A interface inside the container..."
-    docker exec -it -w /app/app $CONTAINER_NAME python rag/main.py
+    docker exec -it -w /app/app $RAG_SCRAPER_CONTAINER_NAME python rag/main.py
     ;;
   rag-ingest)
     echo "📥 Running full RAG ingestion pipeline inside the container..."
-    docker exec -it -w /app/app $CONTAINER_NAME python rag/ingestion_pipeline.py
+    docker exec -it -w /app/app $RAG_SCRAPER_CONTAINER_NAME python rag/ingestion_pipeline.py
     ;;
   rag-incremental)
     echo "➕ Running incremental RAG ingestion inside the container..."
-    docker exec -it -w /app/app $CONTAINER_NAME python rag/incremental_ingestion.py
+    docker exec -it -w /app/app $RAG_SCRAPER_CONTAINER_NAME python rag/incremental_ingestion.py
     ;;
   rag-api-start)
     echo "🚀 Starting RAG API service..."
@@ -102,11 +102,11 @@ case "$1" in
 
     if [ "$BACKGROUND" = "true" ]; then
       echo "🧵 Running in background with nohup..."
-      nohup docker exec $CONTAINER_NAME $CMD > logs/scraper.out 2>&1 &
+      nohup docker exec $RAG_SCRAPER_CONTAINER_NAME $CMD > logs/scraper.out 2>&1 &
       echo "📌 Background PID: $!"
       echo "📝 Logs: logs/scraper.out"
     else
-      docker exec -it $CONTAINER_NAME $CMD
+      docker exec -it $RAG_SCRAPER_CONTAINER_NAME $CMD
     fi
     ;;
 
@@ -134,17 +134,17 @@ case "$1" in
 
     if [ "$BACKGROUND" = "true" ]; then
       echo "🧵 Running in background with nohup..."
-      nohup docker exec $CONTAINER_NAME $CMD > logs/scraper-newest.out 2>&1 &
+      nohup docker exec $RAG_SCRAPER_CONTAINER_NAME $CMD > logs/scraper-newest.out 2>&1 &
       echo "📌 Background PID: $!"
       echo "📝 Logs: logs/scraper-newest.out"
     else
-      docker exec -it $CONTAINER_NAME $CMD
+      docker exec -it $RAG_SCRAPER_CONTAINER_NAME $CMD
     fi
     ;;
 
   stop-scraper)
     echo "🛑 Attempting to stop background scraper process..."
-    docker exec -it $CONTAINER_NAME pkill -f main.py && echo "✅ Scraper stopped." || echo "⚠️ No running scraper found."
+    docker exec -it $RAG_SCRAPER_CONTAINER_NAME pkill -f main.py && echo "✅ Scraper stopped." || echo "⚠️ No running scraper found."
     ;;
   *)
     echo "Usage:"

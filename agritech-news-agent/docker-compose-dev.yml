@@ -1,12 +1,34 @@
 services:
-  agritech-news-agent-app:
-    container_name: agritech-news-agent-app
-    build: .
+  rag-scraper-app:
+    container_name: agritech-news-agent-rag-scraper-app
+    build:
+      context: .
+      dockerfile: Dockerfile.app
     env_file:
       - .env
     volumes:
       - .:/app
     command: tail -f /dev/null
+    restart: unless-stopped
+    networks:
+      - gen-ai-network
+
+  web-app:
+    container_name: agritech-news-agent-web-app
+    build:
+      context: .
+      dockerfile: Dockerfile.web
+      args:
+        ENV: ${ENV:-dev} 
+    env_file:
+      - .env
+    working_dir: /app
+    volumes:
+      - ./web:/app
+      - agritech-news-agent-web-app:/app/node_modules
+    # command: sh -c "pnpm install && pnpm dev -p 3002"
+    ports:
+      - "3002:3002"
     restart: unless-stopped
     networks:
       - gen-ai-network
@@ -39,7 +61,9 @@ services:
 
   rag-api:
     container_name: agritech-news-agent-rag-api
-    build: .
+    build:
+      context: .
+      dockerfile: Dockerfile.app
     env_file:
       - .env
     volumes:
@@ -59,6 +83,9 @@ volumes:
     driver: local
   agritech-news-agent-qdrant-data:
     name: agritech-news-agent-qdrant-data
+    driver: local
+  agritech-news-agent-web-app:
+    name: agritech-news-agent-web-app
     driver: local
 
 networks:
